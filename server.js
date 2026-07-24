@@ -402,21 +402,7 @@ socket.on('player:retake', ({ roomId }, cb) => {
     roomSummary(room)
   );
 
-    room.currentIndex = 0;
-    room.started = true;
-    room.quizEnded = false;
-    room.revealed = false;
-    room.responses = {};
-    room.scores = {};
-
-    cb?.({ ok: true });
-
-    io.to(room.roomId)
-      .emit(
-        'room:update',
-        roomSummary(room)
-      );
-
+   
 });
   socket.on('disconnect', () => {
     for (const room of rooms.values()) {
