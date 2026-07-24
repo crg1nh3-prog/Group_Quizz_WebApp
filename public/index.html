@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Group Quiz Live</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="app">
+    <header class="main-header">
+      <div>
+        <p class="eyebrow">Interactive Group Quiz</p>
+        <h1>Live QR Quiz</h1>
+        <p class="subtitle">Create quiz rooms, collect live answers, and reveal explanations.</p>
+      </div>
+
+      <div class="pill" id="roomPill">No room</div>
+    </header>
+
+    <main id="home" class="hero-card">
+      <div class="hero-content">
+        <p class="eyebrow">Start here</p>
+        <h2>Run a live quiz from your laptop</h2>
+        <p>
+          Create a host room, show the QR code, and participants can join from their mobile browser.
+        </p>
+
+        <div class="home-actions">
+          <button id="createHost">Create Host Room</button>
+
+          <div class="join-box">
+            <input id="manualRoom" placeholder="Enter room code" maxlength="8" />
+            <button id="joinManual" class="secondary">Join</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <section id="namePanel" class="card hidden center">
+      <p class="eyebrow">Participant</p>
+      <h2>Enter your name</h2>
+      <p class="muted">This name will be visible to the host.</p>
+
+      <div class="name-box">
+        <input id="playerName" placeholder="Your name" />
+        <button id="confirmJoin">Join Quiz</button>
+      </div>
+
+      <p id="joinError" class="error"></p>
+    </section>
+
+    <section id="hostPanel" class="host-layout hidden">
+      <aside class="card host-sidebar">
+        <div class="section-title">
+          <p class="eyebrow">Host Control</p>
+          <h2>Quiz Room</h2>
+        </div>
+
+        <div class="room-code-box">
+          <span>Room Code</span>
+          <strong id="hostRoomCode"></strong>
+        </div>
+
+        <img id="qr" class="qr" alt="Quiz QR code" />
+
+        <a id="joinLink" class="join-link" target="_blank" rel="noreferrer">
+          Open participant link
+        </a>
+
+        <div class="host-buttons">
+          <button id="startQuiz">Start / Restart</button>
+          <button id="revealAnswer" class="accent">Show Answer</button>
+          <button id="nextQuestion" class="secondary">Next Question</button>
+        </div>
+
+        <div class="mini-info">
+          <div>
+            <span>Participants</span>
+            <strong id="participantCount">(0)</strong>
+          </div>
+          <div>
+            <span>Progress</span>
+            <strong id="progress">0/0</strong>
+          </div>
+        </div>
+      </aside>
+
+      <main class="host-main">
+        <section class="card question-card">
+          <div class="topline">
+            <div>
+              <p class="eyebrow">Current Question</p>
+              <h2 id="hostQuestion">Question</h2>
+            </div>
+          </div>
+
+          <div id="hostOptions" class="option-list"></div>
+
+          <h3>Live responses</h3>
+          <div id="bars"></div>
+
+          <h3>Participants</h3>
+          <div id="participants" class="chips"></div>
+
+          <div id="hostExplanation" class="explanation hidden"></div>
+        </section>
+
+        <section class="card manager-card">
+          <div class="manager-header">
+            <div>
+              <p class="eyebrow">Question Manager</p>
+              <h2>Add or Edit Questions</h2>
+            </div>
+
+            <button id="clearForm" class="secondary">Clear Form</button>
+          </div>
+
+          <div class="form-grid">
+            <div class="field full">
+              <label>Question</label>
+              <textarea id="qmQuestion" placeholder="Type your question here"></textarea>
+            </div>
+
+            <div class="field">
+              <label>Option A</label>
+              <input id="qmOption0" placeholder="Option A" />
+            </div>
+
+            <div class="field">
+              <label>Option B</label>
+              <input id="qmOption1" placeholder="Option B" />
+            </div>
+
+            <div class="field">
+              <label>Option C</label>
+              <input id="qmOption2" placeholder="Option C" />
+            </div>
+
+            <div class="field">
+              <label>Option D</label>
+              <input id="qmOption3" placeholder="Option D" />
+            </div>
+
+            <div class="field">
+              <label>Correct Answer</label>
+              <select id="qmAnswer">
+                <option value="0">A</option>
+                <option value="1">B</option>
+                <option value="2">C</option>
+                <option value="3">D</option>
+              </select>
+            </div>
+
+            <div class="field full">
+              <label>Explanation</label>
+              <textarea id="qmExplanation" placeholder="Type the explanation to show after answer reveal"></textarea>
+            </div>
+          </div>
+
+          <div class="manager-actions">
+            <button id="saveQuestion">Add Question</button>
+            <span id="qmStatus" class="small-status"></span>
+          </div>
+
+          <div class="question-list-header">
+            <h3>Current Questions</h3>
+            <span id="questionCountBadge">0 questions</span>
+          </div>
+
+          <div id="questionList" class="question-list"></div>
+        </section>
+      </main>
+    </section>
+
+    <section id="playerPanel" class="player-card hidden">
+      <div class="player-inner">
+        <p class="eyebrow" id="playerRoom"></p>
+        <h2 id="playerQuestion">Waiting for host...</h2>
+
+        <div id="playerOptions" class="player-options"></div>
+
+        <div id="playerExplanation" class="explanation hidden"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
