@@ -319,17 +319,27 @@ io.on('connection', socket => {
       }
     });
 
-    if (room.currentIndex < room.questions.length - 1) {
-      room.currentIndex += 1;
-      room.started = true;
-      room.revealed = false;
-      room.responses = {};
-    } else {
-      room.quizEnded = true;
-      room.started = false;
-      room.revealed = false;
-      room.responses = {};
-    }
+if (room.currentIndex < room.questions.length - 1) {
+
+  room.currentIndex += 1;
+
+  room.started = true;
+  room.revealed = false;
+  room.responses = {};
+
+} else {
+
+  room.revealed = true;
+
+  setTimeout(() => {
+    room.quizEnded = true;
+    io.to(room.roomId).emit(
+      'room:update',
+      roomSummary(room)
+    );
+  }, 3000);
+
+}
 
     cb?.({ ok: true });
     io.to(room.roomId).emit('room:update', roomSummary(room));
