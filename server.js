@@ -60,9 +60,11 @@ function cloneQuestions(qs) {
 function createRoomId() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let id = '';
+
   for (let i = 0; i < 6; i++) {
     id += chars[Math.floor(Math.random() * chars.length)];
   }
+
   return id;
 }
 
@@ -101,17 +103,18 @@ function newRoom(hostSocketId) {
   }
 
   rooms.set(roomId, {
-  roomId,
-  hostSocketId,
-  questions: cloneQuestions(defaultQuestions),
-  currentIndex: 0,
-  started: false,
-  revealed: false,
-  quizEnded: false,
-  participants: {},
-  responses: {},
-  scores: {}
-});
+    roomId,
+    hostSocketId,
+    questions: cloneQuestions(defaultQuestions),
+    currentIndex: 0,
+    started: false,
+    revealed: false,
+    quizEnded: false,
+    participants: {},
+    responses: {},
+    scores: {}
+  });
+
   return rooms.get(roomId);
 }
 
@@ -132,7 +135,7 @@ function roomSummary(room) {
     currentIndex: room.currentIndex,
     totalQuestions: room.questions.length,
     questions: room.questions,
-   started: room.started,
+    started: room.started,
     revealed: room.revealed,
     quizEnded: room.quizEnded,
     scores: room.scores,
@@ -146,6 +149,7 @@ function roomSummary(room) {
 async function qrForRoom(req, roomId) {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
   const joinUrl = `${baseUrl}/?room=${roomId}&role=player`;
+
   const dataUrl = await QRCode.toDataURL(joinUrl, {
     margin: 1,
     width: 320
@@ -195,10 +199,12 @@ io.on('connection', socket => {
     }
 
     room.questions = cleanQuestions;
-    room.currentIndex = Math.min(room.currentIndex, room.questions.length - 1);
+    room.currentIndex = 0;
     room.started = false;
     room.revealed = false;
+    room.quizEnded = false;
     room.responses = {};
+    room.scores = {};
 
     cb?.({ ok: true, summary: roomSummary(room) });
     io.to(room.roomId).emit('room:update', roomSummary(room));
@@ -231,19 +237,19 @@ io.on('connection', socket => {
   });
 
   socket.on('player:answer', ({ roomId, optionIndex }, cb) => {
-   const room = rooms.get(String(roomId || '').toUpperCase());
+    const room = rooms.get(String(roomId || '').toUpperCase());
 
-if (
-  !room ||
-  !room.started ||
-  room.revealed ||
-  room.quizEnded
-) {
-  return cb?.({ ok: false });
-}
+    if (
+      !room ||
+      !room.started ||
+      room.revealed ||
+      room.quizEnded
+    ) {
+      return cb?.({ ok: false });
+    }
 
-const q = room.questions[room.currentIndex];
-const selected = Number(optionIndex);
+    const q = room.questions[room.currentIndex];
+    const selected = Number(optionIndex);
 
     if (!q || selected < 0 || selected >= q.options.length) {
       return cb?.({ ok: false });
@@ -262,30 +268,24 @@ const selected = Number(optionIndex);
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
-socket.on('host:start', ({ roomId }, cb) => {
-  const room = rooms.get(String(roomId || '').toUpperCase());
+  socket.on('host:start', ({ roomId }, cb) => {
+    const room = rooms.get(String(roomId || '').toUpperCase());
 
-  if (!room || room.hostSocketId !== socket.id) {
-    return cb?.({ ok: false });
-  }
-
-  room.currentIndex = 0;
-  room.started = true;
-  room.revealed = false;
-  room.quizEnded = false;
-  room.responses = {};
-  room.scores = {};
-
-  cb?.({ ok: true });
-
-  io.to(room.roomId).emit(
-    'room:update',
-    roomSummary(room)
-  );
-});
+    if (!room || room.hostSocketId !== socket.id) {
+      return cb?.({ ok: false });
     }
 
-   
+    room.currentIndex = 0;
+    room.started = true;
+    room.revealed = false;
+    room.quizEnded = false;
+    room.responses = {};
+    room.scores = {};
+
+    cb?.({ ok: true });
+    io.to(room.roomId).emit('room:update', roomSummary(room));
+  });
+
   socket.on('host:reveal', ({ roomId }, cb) => {
     const room = rooms.get(String(roomId || '').toUpperCase());
 
@@ -299,74 +299,67 @@ socket.on('host:start', ({ roomId }, cb) => {
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
-socket.on('host:next', ({ roomId }, cb) => {
-  const room = rooms.get(String(roomId || '').toUpperCase());
+  socket.on('host:next', ({ roomId }, cb) => {
+    const room = rooms.get(String(roomId || '').toUpperCase());
 
-  if (!room || room.hostSocketId !== socket.id) {
-    return cb?.({ ok: false });
-  }
-
-  const q = room.questions[room.currentIndex];
-
-  Object.entries(room.responses).forEach(([playerId, answer]) => {
-    if (answer === q.answer) {
-      room.scores[playerId] =
-        (room.scores[playerId] || 0) + 1;
+    if (!room || room.hostSocketId !== socket.id) {
+      return cb?.({ ok: false });
     }
+
+    if (room.quizEnded) {
+      return cb?.({ ok: false });
+    }
+
+    const q = room.questions[room.currentIndex];
+
+    Object.entries(room.responses).forEach(([playerId, answer]) => {
+      if (answer === q.answer) {
+        room.scores[playerId] =
+          (room.scores[playerId] || 0) + 1;
+      }
+    });
+
+    if (room.currentIndex < room.questions.length - 1) {
+      room.currentIndex += 1;
+      room.started = true;
+      room.revealed = false;
+      room.responses = {};
+    } else {
+      room.quizEnded = true;
+      room.started = false;
+      room.revealed = false;
+      room.responses = {};
+    }
+
+    cb?.({ ok: true });
+    io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
-  if (room.currentIndex < room.questions.length - 1) {
+  socket.on('player:retake', ({ roomId }, cb) => {
+    const room = rooms.get(String(roomId || '').toUpperCase());
 
-    room.currentIndex++;
+    if (!room) {
+      return cb?.({ ok: false });
+    }
 
+    room.currentIndex = 0;
     room.started = true;
+    room.quizEnded = false;
     room.revealed = false;
     room.responses = {};
+    room.scores = {};
 
-  } else {
-
-    room.quizEnded = true;
-    room.started = false;
-
-  }
-
-  cb?.({ ok: true });
-
-  io.to(room.roomId)
-    .emit('room:update', roomSummary(room));
-});
-
-socket.on('player:retake', ({ roomId }, cb) => {
-
-  const room = rooms.get(
-    String(roomId || '').toUpperCase()
-  );
-
-  if (!room) {
-    return cb?.({ ok: false });
-  }
-
-  room.currentIndex = 0;
-  room.started = true;
-  room.quizEnded = false;
-  room.revealed = false;
-  room.responses = {};
-  room.scores = {};
-
-  cb?.({ ok: true });
-
-  io.to(room.roomId).emit(
-    'room:update',
-    roomSummary(room)
-  );
-
-});
+    cb?.({ ok: true });
+    io.to(room.roomId).emit('room:update', roomSummary(room));
+  });
 
   socket.on('disconnect', () => {
     for (const room of rooms.values()) {
       if (room.participants[socket.id]) {
         delete room.participants[socket.id];
         delete room.responses[socket.id];
+        delete room.scores[socket.id];
+
         io.to(room.roomId).emit('room:update', roomSummary(room));
       }
 
@@ -380,5 +373,3 @@ socket.on('player:retake', ({ roomId }, cb) => {
 server.listen(PORT, () => {
   console.log(`Quiz app running on port ${PORT}`);
 });
-
-   
