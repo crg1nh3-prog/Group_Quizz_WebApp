@@ -231,14 +231,19 @@ io.on('connection', socket => {
   });
 
   socket.on('player:answer', ({ roomId, optionIndex }, cb) => {
-    const room = rooms.get(String(roomId || '').toUpperCase());
+   const room = rooms.get(String(roomId || '').toUpperCase());
 
-    if (!room || !room.started || room.revealed) {
-      return cb?.({ ok: false });
-    }
-     if (5    !room ||6    !room.started ||7    room.revealed ||8    room.quizEnded9  ) {10    return cb?.({ ok: false });11  }
-    const q = room.questions[room.currentIndex];
-    const selected = Number(optionIndex);
+if (
+  !room ||
+  !room.started ||
+  room.revealed ||
+  room.quizEnded
+) {
+  return cb?.({ ok: false });
+}
+
+const q = room.questions[room.currentIndex];
+const selected = Number(optionIndex);
 
     if (!q || selected < 0 || selected >= q.options.length) {
       return cb?.({ ok: false });
