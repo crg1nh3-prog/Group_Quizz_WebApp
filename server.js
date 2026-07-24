@@ -101,16 +101,17 @@ function newRoom(hostSocketId) {
   }
 
   rooms.set(roomId, {
-    roomId,
-    hostSocketId,
-    questions: cloneQuestions(defaultQuestions),
-    currentIndex: 0,
-    started: false,
-    revealed: false,
-    participants: {},
-    responses: {}
-  });
-
+  roomId,
+  hostSocketId,
+  questions: cloneQuestions(defaultQuestions),
+  currentIndex: 0,
+  started: false,
+  revealed: false,
+  quizEnded: false,
+  participants: {},
+  responses: {},
+  scores: {}
+});
   return rooms.get(roomId);
 }
 
