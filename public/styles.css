@@ -31,14 +31,21 @@ body {
   margin: 0 auto;
   padding: 28px;
 }
-
 .main-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 24px;
 
+background-image: url('bosch-banner.png');
+background-size: cover;
+background-position: center;
+
+padding: 20px;
+border-radius: 20px;
+
+color: white;
+}
 h1,
 h2,
 h3,
@@ -47,8 +54,9 @@ h4 {
 }
 
 h1 {
-  font-size: 44px;
-  letter-spacing: -1px;
+font-size: 44px;
+letter-spacing: -1px;
+color: white;
 }
 
 h2 {
@@ -77,13 +85,13 @@ p {
   letter-spacing: 0.14em;
   font-size: 12px;
   font-weight: 800;
-  color: var(--blue);
+  color: white;
 }
 
 .subtitle {
-  margin-top: 8px;
+margin-top: 8px;
+color: white;
 }
-
 .hidden {
   display: none !important;
 }
