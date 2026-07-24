@@ -266,12 +266,66 @@ function renderHost(summary, q) {
 }
 
 function renderPlayer(summary, q) {
-  $('playerRoom').textContent =
-    `Room ${summary.roomId} • Question ${summary.currentIndex + 1}/${summary.totalQuestions}`;
 
-  $('playerQuestion').textContent = summary.started
-    ? q.question
-    : 'Waiting for host to start...';
+  if (summary.quizEnded) {
+
+    const score =
+      summary.scores?.[socket.id] || 0;
+
+    $('playerRoom').textContent =
+      `Room ${summary.roomId}`;
+
+    $('playerQuestion').innerHTML =
+      '🎉 Quiz Completed!';
+
+    $('playerOptions').innerHTML = `
+      <div style="
+        text-align:center;
+        padding:20px;
+      ">
+
+        <h2>Your Score</h2>
+
+        <h1 style="
+          font-size:64px;
+          color:#0078d4;
+          margin:20px 0;
+        ">
+          ${score}/${summary.totalQuestions}
+        </h1>
+
+        <button id="retakeQuizBtn">
+          Retake Quiz
+        </button>
+
+      </div>
+    `;
+
+    document
+      .getElementById('retakeQuizBtn')
+      ?.addEventListener('click', () => {
+
+        selected = null;
+
+        socket.emit(
+          'player:retake',
+          { roomId }
+        );
+
+      });
+
+    return;
+  }
+
+  $('playerRoom').textContent =
+    `Room ${summary.roomId} • Question ${
+      summary.currentIndex + 1
+    }/${summary.totalQuestions}`;
+
+  $('playerQuestion').textContent =
+    summary.started
+      ? q.question
+      : 'Waiting for host to start...';
 
   if (!summary.started) {
     $('playerOptions').innerHTML = '';
@@ -280,8 +334,14 @@ function renderPlayer(summary, q) {
 
   $('playerOptions').innerHTML = q.options
     .map((o, i) => {
-      const selectedClass = selected === i ? 'selected' : '';
-      const correctClass = summary.revealed && i === q.answer ? 'correct' : '';
+
+      const selectedClass =
+        selected === i ? 'selected' : '';
+
+      const correctClass =
+        summary.revealed && i === q.answer
+          ? 'correct'
+          : '';
 
       return `
         <button
@@ -289,30 +349,58 @@ function renderPlayer(summary, q) {
           data-i="${i}"
           ${summary.revealed ? 'disabled' : ''}
         >
-          <span class="option-letter">${letter(i)}</span>
+          <span class="option-letter">
+            ${letter(i)}
+          </span>
+
           <span>${esc(o)}</span>
         </button>
       `;
     })
     .join('');
 
-  document.querySelectorAll('.playerOption').forEach(btn => {
-    btn.onclick = () => {
-      selected = Number(btn.dataset.i);
-      socket.emit('player:answer', { roomId, optionIndex: selected });
-      renderPlayer(latest, q);
-    };
-  });
+  document
+    .querySelectorAll('.playerOption')
+    .forEach(btn => {
 
-  $('playerExplanation').classList.toggle('hidden', !summary.revealed);
+      btn.onclick = () => {
 
-  $('playerExplanation').innerHTML = summary.revealed
-    ? `
-      <b>Correct answer: ${letter(q.answer)}. ${esc(q.options[q.answer])}</b>
-      <br />
-      ${esc(q.explanation || 'No explanation added.')}
-    `
-    : '';
+        selected = Number(btn.dataset.i);
+
+        socket.emit(
+          'player:answer',
+          {
+            roomId,
+            optionIndex: selected
+          }
+        );
+
+        renderPlayer(latest, q);
+      };
+
+    });
+
+  $('playerExplanation')
+    .classList.toggle(
+      'hidden',
+      !summary.revealed
+    );
+
+  $('playerExplanation').innerHTML =
+    summary.revealed
+      ? `
+        <b>
+          Correct answer:
+          ${letter(q.answer)}.
+          ${esc(q.options[q.answer])}
+        </b>
+        <br />
+        ${esc(
+          q.explanation ||
+          'No explanation added.'
+        )}
+      `
+      : '';
 }
 
 function renderQuestionManager() {
