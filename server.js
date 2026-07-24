@@ -132,8 +132,10 @@ function roomSummary(room) {
     currentIndex: room.currentIndex,
     totalQuestions: room.questions.length,
     questions: room.questions,
-    started: room.started,
+   started: room.started,
     revealed: room.revealed,
+    quizEnded: room.quizEnded,
+    scores: room.scores,
     question: q,
     responses: room.responses,
     counts,
@@ -234,7 +236,7 @@ io.on('connection', socket => {
     if (!room || !room.started || room.revealed) {
       return cb?.({ ok: false });
     }
-
+     if (5    !room ||6    !room.started ||7    room.revealed ||8    room.quizEnded9  ) {10    return cb?.({ ok: false });11  }
     const q = room.questions[room.currentIndex];
     const selected = Number(optionIndex);
 
@@ -255,11 +257,27 @@ io.on('connection', socket => {
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
-  socket.on('host:start', ({ roomId }, cb) => {
-    const room = rooms.get(String(roomId || '').toUpperCase());
+socket.on('host:start', ({ roomId }, cb) => {
+  const room = rooms.get(String(roomId || '').toUpperCase());
 
-    if (!room || room.hostSocketId !== socket.id) {
-      return cb?.({ ok: false });
+  if (!room || room.hostSocketId !== socket.id) {
+    return cb?.({ ok: false });
+  }
+
+  room.currentIndex = 0;
+  room.started = true;
+  room.revealed = false;
+  room.quizEnded = false;
+  room.responses = {};
+  room.scores = {};
+
+  cb?.({ ok: true });
+
+  io.to(room.roomId).emit(
+    'room:update',
+    roomSummary(room)
+  );
+});
     }
 
     room.started = true;
@@ -283,8 +301,61 @@ io.on('connection', socket => {
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
-  socket.on('host:next', ({ roomId }, cb) => {
-    const room = rooms.get(String(roomId || '').toUpperCase());
+socket.on('host:next', ({ roomId }, cb) => {
+
+  const room =
+    rooms.get(
+      String(roomId || '').toUpperCase()
+    );
+
+  if (!room || room.hostSocketId !== socket.id) {
+    return cb?.({ ok: false });
+  }
+
+  const q =
+    room.questions[
+      room.currentIndex
+    ];
+
+  Object.entries(room.responses)
+    .forEach(([playerId, answer]) => {
+
+      if (answer === q.answer) {
+
+        room.scores[playerId] =
+          (room.scores[playerId] || 0) + 1;
+
+      }
+
+    });
+
+  if (
+    room.currentIndex <
+    room.questions.length - 1
+  ) {
+
+    room.currentIndex++;
+
+    room.started = true;
+    room.revealed = false;
+    room.responses = {};
+
+  } else {
+
+    room.quizEnded = true;
+    room.started = false;
+
+  }
+
+  cb?.({ ok: true });
+
+  io.to(room.roomId)
+    .emit(
+      'room:update',
+      roomSummary(room)
+    );
+
+});
 
     if (!room || room.hostSocketId !== socket.id) {
       return cb?.({ ok: false });
@@ -302,6 +373,38 @@ io.on('connection', socket => {
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
+socket.on(
+  'player:retake',
+  ({ roomId }, cb) => {
+
+    const room =
+      rooms.get(
+        String(roomId || '')
+          .toUpperCase()
+      );
+
+    if (!room) {
+      return cb?.({
+        ok: false
+      });
+    }
+
+    room.currentIndex = 0;
+    room.started = true;
+    room.quizEnded = false;
+    room.revealed = false;
+    room.responses = {};
+    room.scores = {};
+
+    cb?.({ ok: true });
+
+    io.to(room.roomId)
+      .emit(
+        'room:update',
+        roomSummary(room)
+      );
+
+});
   socket.on('disconnect', () => {
     for (const room of rooms.values()) {
       if (room.participants[socket.id]) {
