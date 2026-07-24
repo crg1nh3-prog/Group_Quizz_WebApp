@@ -400,9 +400,7 @@ socket.on('player:retake', ({ roomId }, cb) => {
   io.to(room.roomId).emit(
     'room:update',
     roomSummary(room)
-  );
-
-   
+  ); 
 });
   socket.on('disconnect', () => {
     for (const room of rooms.values()) {
