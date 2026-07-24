@@ -307,37 +307,22 @@ socket.on('host:start', ({ roomId }, cb) => {
   });
 
 socket.on('host:next', ({ roomId }, cb) => {
-
-  const room =
-    rooms.get(
-      String(roomId || '').toUpperCase()
-    );
+  const room = rooms.get(String(roomId || '').toUpperCase());
 
   if (!room || room.hostSocketId !== socket.id) {
     return cb?.({ ok: false });
   }
 
-  const q =
-    room.questions[
-      room.currentIndex
-    ];
+  const q = room.questions[room.currentIndex];
 
-  Object.entries(room.responses)
-    .forEach(([playerId, answer]) => {
+  Object.entries(room.responses).forEach(([playerId, answer]) => {
+    if (answer === q.answer) {
+      room.scores[playerId] =
+        (room.scores[playerId] || 0) + 1;
+    }
+  });
 
-      if (answer === q.answer) {
-
-        room.scores[playerId] =
-          (room.scores[playerId] || 0) + 1;
-
-      }
-
-    });
-
-  if (
-    room.currentIndex <
-    room.questions.length - 1
-  ) {
+  if (room.currentIndex < room.questions.length - 1) {
 
     room.currentIndex++;
 
@@ -355,29 +340,8 @@ socket.on('host:next', ({ roomId }, cb) => {
   cb?.({ ok: true });
 
   io.to(room.roomId)
-    .emit(
-      'room:update',
-      roomSummary(room)
-    );
-
+    .emit('room:update', roomSummary(room));
 });
-
-    if (!room || room.hostSocketId !== socket.id) {
-      return cb?.({ ok: false });
-    }
-
-    if (room.currentIndex < room.questions.length - 1) {
-      room.currentIndex += 1;
-    }
-
-    room.started = true;
-    room.revealed = false;
-    room.responses = {};
-
-    cb?.({ ok: true });
-    io.to(room.roomId).emit('room:update', roomSummary(room));
-  });
-
 socket.on('player:retake', ({ roomId }, cb) => {
 
   const room = rooms.get(
