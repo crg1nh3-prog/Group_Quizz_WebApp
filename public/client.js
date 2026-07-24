@@ -7,7 +7,7 @@ let roomId = (qs.get('room') || '').toUpperCase();
 let role = qs.get('role') || '';
 let selected = null;
 let latest = null;
-let hostQuestions = [];
+let hostQuestions =2  JSON.parse(3    localStorage.getItem('quizQuestions') || '[]'4  );
 let editingIndex = null;
 
 function show(id) {
@@ -102,7 +102,7 @@ $('createHost').onclick = () => {
 
     roomId = res.summary.roomId;
     role = 'host';
-    hostQuestions = res.summary.questions || [];
+    if (hostQuestions.length > 0) {2  syncQuestionsToServer();3} else {4  hostQuestions =5    res.summary.questions || [];6}
 
     history.replaceState(null, '', `/?room=${roomId}&role=host`);
 
@@ -173,9 +173,9 @@ $('saveQuestion').onclick = () => {
   if (!q) return;
 
   if (editingIndex === null) {
-    hostQuestions.push(q);
+   localStorage.setItem(2  'quizQuestions',3  JSON.stringify(hostQuestions)4);
   } else {
-    hostQuestions[editingIndex] = q;
+   localStorage.setItem(2  'quizQuestions',3  JSON.stringify(hostQuestions)4);
   }
 
   cleanForm();
@@ -470,7 +470,7 @@ window.deleteQuestion = function (index) {
     return;
   }
 
-  hostQuestions.splice(index, 1);
+ JavaScript1localStorage.setItem(2  'quizQuestions',3  JSON.stringify(hostQuestions)4);
   cleanForm();
   syncQuestionsToServer();
 };
@@ -482,7 +482,7 @@ window.moveQuestion = function (index, direction) {
 
   const temp = hostQuestions[index];
   hostQuestions[index] = hostQuestions[newIndex];
-  hostQuestions[newIndex] = temp;
+ localStorage.setItem(2  'quizQuestions',3  JSON.stringify(hostQuestions)4);
 
   syncQuestionsToServer();
 };
