@@ -285,14 +285,7 @@ socket.on('host:start', ({ roomId }, cb) => {
 });
     }
 
-    room.started = true;
-    room.revealed = false;
-    room.responses = {};
-
-    cb?.({ ok: true });
-    io.to(room.roomId).emit('room:update', roomSummary(room));
-  });
-
+   
   socket.on('host:reveal', ({ roomId }, cb) => {
     const room = rooms.get(String(roomId || '').toUpperCase());
 
