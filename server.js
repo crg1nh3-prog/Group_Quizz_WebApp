@@ -378,21 +378,29 @@ socket.on('host:next', ({ roomId }, cb) => {
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
-socket.on(
-  'player:retake',
-  ({ roomId }, cb) => {
+socket.on('player:retake', ({ roomId }, cb) => {
 
-    const room =
-      rooms.get(
-        String(roomId || '')
-          .toUpperCase()
-      );
+  const room = rooms.get(
+    String(roomId || '').toUpperCase()
+  );
 
-    if (!room) {
-      return cb?.({
-        ok: false
-      });
-    }
+  if (!room) {
+    return cb?.({ ok: false });
+  }
+
+  room.currentIndex = 0;
+  room.started = true;
+  room.quizEnded = false;
+  room.revealed = false;
+  room.responses = {};
+  room.scores = {};
+
+  cb?.({ ok: true });
+
+  io.to(room.roomId).emit(
+    'room:update',
+    roomSummary(room)
+  );
 
     room.currentIndex = 0;
     room.started = true;
