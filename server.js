@@ -285,4 +285,39 @@ io.on('connection', socket => {
   socket.on('host:next', ({ roomId }, cb) => {
     const room = rooms.get(String(roomId || '').toUpperCase());
 
+    if (!room || room.hostSocketId !== socket.id) {
+      return cb?.({ ok: false });
+    }
+
+    if (room.currentIndex < room.questions.length - 1) {
+      room.currentIndex += 1;
+    }
+
+    room.started = true;
+    room.revealed = false;
+    room.responses = {};
+
+    cb?.({ ok: true });
+    io.to(room.roomId).emit('room:update', roomSummary(room));
+  });
+
+  socket.on('disconnect', () => {
+    for (const room of rooms.values()) {
+      if (room.participants[socket.id]) {
+        delete room.participants[socket.id];
+        delete room.responses[socket.id];
+        io.to(room.roomId).emit('room:update', roomSummary(room));
+      }
+
+      if (room.hostSocketId === socket.id) {
+        room.hostSocketId = null;
+      }
+    }
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Quiz app running on port ${PORT}`);
+});
+
    
