@@ -277,18 +277,36 @@ function renderHost(summary, q) {
     $('hostExplanation').classList.add('hidden');
 
     $('participants').innerHTML =
-      summary.participants
-        .map(p => {
-          const score = summary.scores?.[p.id] || 0;
+  `
+    <h3>🏆 Final Leaderboard</h3>
+
+    ${
+      summary.leaderboard
+        .map((player, index) => {
+
+          const medal =
+            index === 0 ? '🥇' :
+            index === 1 ? '🥈' :
+            index === 2 ? '🥉' :
+            '🏅';
 
           return `
-            <span class="chip">
-              ${esc(p.name)} - ${score}/${summary.totalQuestions}
-            </span>
+            <div style="
+              padding:10px;
+              margin:5px 0;
+              border:1px solid #ddd;
+              border-radius:8px;
+            ">
+              ${medal}
+              ${esc(player.name)}
+              -
+              <b>${player.score}/${summary.totalQuestions}</b>
+            </div>
           `;
         })
-        .join('') || '<p class="muted">No participants yet.</p>';
-
+        .join('')
+    }
+  `;
     return;
   }
 
@@ -370,24 +388,80 @@ function renderHost(summary, q) {
 }
 
 function renderPlayer(summary, q) {
-  if (summary.quizEnded) {
+if (summary.quizEnded) {
+
     const score = summary.scores?.[socket.id] || 0;
+
+    const winner = summary.winner;
+
+    const leaderboardHtml = summary.leaderboard
+      .map((player, index) => {
+
+        const medal =
+          index === 0 ? '🥇' :
+          index === 1 ? '🥈' :
+          index === 2 ? '🥉' :
+          '🏅';
+
+        return `
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            padding:8px;
+            border-bottom:1px solid #ddd;
+          ">
+            <span>${medal} ${esc(player.name)}</span>
+            <b>${player.score}</b>
+          </div>
+        `;
+      })
+      .join('');
 
     $('playerRoom').textContent = `Room ${summary.roomId}`;
 
     $('playerQuestion').innerHTML = '🎉 Quiz Completed!';
 
     $('playerOptions').innerHTML = `
-      <div style="text-align:center; padding:20px;">
+      <div style="text-align:center;padding:20px;">
+
+        <h2>🏆 Winner</h2>
+
+        <h1 style="color:gold;">
+          ${winner ? esc(winner.name) : 'No Winner'}
+        </h1>
+
+        <h2>
+          ${winner ? winner.score : 0}/${summary.totalQuestions}
+        </h2>
+
+        <hr style="margin:20px 0;">
+
         <h2>Your Score</h2>
 
-        <h1 style="font-size:64px; color:#0078d4; margin:20px 0;">
+        <h1 style="
+            font-size:64px;
+            color:#0078d4;
+            margin:20px 0;
+        ">
           ${score}/${summary.totalQuestions}
         </h1>
+
+        <h2>📊 Final Leaderboard</h2>
+
+        <div style="
+          text-align:left;
+          max-width:500px;
+          margin:auto;
+        ">
+          ${leaderboardHtml}
+        </div>
+
+        <br>
 
         <button id="retakeQuizBtn">
           Retake Quiz
         </button>
+
       </div>
     `;
 
