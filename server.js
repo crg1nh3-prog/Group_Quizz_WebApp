@@ -232,29 +232,30 @@ function roomSummary(room) {
     .sort((a, b) => b.score - a.score);
 
   // Winner
-  const winner = leaderboard.length > 0
-    ? leaderboard[0]
-    : null;
+const winner =
+room.quizEnded && leaderboard.length > 0
+? leaderboard[0]
+: null;
 
-  return {
-    roomId: room.roomId,
-    currentIndex: room.currentIndex,
-    totalQuestions: room.questions.length,
-    questions: room.questions,
-    started: room.started,
-    revealed: room.revealed,
-    quizEnded: room.quizEnded,
+return {
+roomId: room.roomId,
+currentIndex: room.currentIndex,
+totalQuestions: room.questions.length,
+questions: room.questions,
+started: room.started,
+revealed: room.revealed,
+quizEnded: room.quizEnded,
+  
+scores: room.scores,
 
-    scores: room.scores,
-
-    leaderboard,   // <-- added
-    winner,        // <-- added
-
-    question: q,
-    responses: room.responses,
-    counts,
-    participants: Object.values(room.participants)
-  };
+leaderboard: room.quizEnded ? leaderboard : [],
+winner,
+ 
+question: q,
+responses: room.responses,
+counts,
+participants: Object.values(room.participants)
+};
 }
 
 async function qrForRoom(req, roomId) {
