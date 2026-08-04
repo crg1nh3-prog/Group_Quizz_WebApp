@@ -39,10 +39,10 @@ const defaultQuestions = [
 },
 
 {
-    question: 'What comes once in a minute, twice in a moment, but never in a thousand years?',
-    options: ['Letter A', 'Letter M', 'Letter E', 'Number 1'],
-    answer: 1,
-    explanation: 'The letter M appears once in "minute", twice in "moment", and not at all in "thousand years".'
+    question: 'What does PDF stand for?',
+    options: ['Portable Data File', 'Personal Document Format', 'Portable Document Format', 'Public DOcument File'],
+    answer: 2,
+    explanation: 'PDF stands for Portable Document Format.'
 },
 
 {
@@ -83,10 +83,10 @@ explanation: 'The more you dig from a hole, the larger it becomes.'
     explanation: 'Henry Ford popularized the moving assembly line in the United States, revolutionizing manufacturing.'
 },
 {
-question: 'How many animals of each species did Moses take onto the Ark?',
-options: ['2', '4', '6', 'None'],
-answer: 3,
-explanation: 'Moses did not take animals onto the Ark. Noah did.'
+question: 'Which of these is considered as a good meeting etiquette?',
+options: ['Interrupting others', 'Keeping your microphone muted when not speaking', 'Joining 10 minutes late and giving convincible reasons', 'None'],
+answer: 1,
+explanation: 'Whenever we attend any meeting, we must make sure we keep our microphone muted when not speaking, so that we donot disturb others'
 },
 {
     question: 'Which country has the highest number of time zones?',
@@ -122,12 +122,6 @@ explanation: 'Mount Everest was still the highest mountain even before it was di
     explanation: 'Albert Einstein worked at the Swiss Patent Office before publishing his groundbreaking theories.'
 },
 
-  {
-question: 'Which word becomes shorter when you add two letters to it?',
-options: ['Long', 'Tall', 'Short', 'Small'],
-answer: 2,
-explanation: 'Adding "er" to "short" makes the word "shorter".'
-},
 {
 question: 'How many birthdays does the average person have?',
 options: ['One per year', '10', '50', 'One'],
@@ -137,8 +131,8 @@ explanation: 'A person is only born once, so they have one birthday.'
 
  {
 question: 'Which English word contains all five vowels in alphabetical order?',
-options: ['Facetious', 'Beautiful', 'Question', 'Education'],
-answer: 0,
+options: ['Education', 'Beautiful', 'Question', 'Facetious'],
+answer: 3,
 explanation: 'Facetious contains all five vowels (a, e, i, o, u) in alphabetical order.'
 },
   {
