@@ -251,7 +251,7 @@ function render(summary) {
 
   const q = summary.question;
 
-  selected = summary.responses?.[socket.id] ?? selected;
+ selected = summary.responses?.[socket.id] !== undefined ? summary.responses[socket.id] : null;
 
   if (role === 'host') {
     renderHost(summary, q);
