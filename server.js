@@ -222,6 +222,20 @@ function roomSummary(room) {
     Object.values(room.responses).filter(v => v === i).length
   );
 
+  // Leaderboard (highest score → lowest score)
+  const leaderboard = Object.entries(room.scores)
+    .map(([playerId, score]) => ({
+      playerId,
+      name: room.participants[playerId]?.name || 'Unknown',
+      score
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  // Winner
+  const winner = leaderboard.length > 0
+    ? leaderboard[0]
+    : null;
+
   return {
     roomId: room.roomId,
     currentIndex: room.currentIndex,
@@ -230,7 +244,12 @@ function roomSummary(room) {
     started: room.started,
     revealed: room.revealed,
     quizEnded: room.quizEnded,
+
     scores: room.scores,
+
+    leaderboard,   // <-- added
+    winner,        // <-- added
+
     question: q,
     responses: room.responses,
     counts,
@@ -458,9 +477,9 @@ if (room.currentIndex < room.questions.length - 1) {
   socket.on('disconnect', () => {
     for (const room of rooms.values()) {
       if (room.participants[socket.id]) {
-        delete room.participants[socket.id];
+       // delete room.participants[socket.id];
         delete room.responses[socket.id];
-        delete room.scores[socket.id];
+        //delete room.scores[socket.id];
 
         io.to(room.roomId).emit('room:update', roomSummary(room));
       }
