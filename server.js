@@ -178,6 +178,7 @@ const defaultQuestions = [
   answer: 0,
   explanation: 'AI image generation from simple text prompts became practical only in recent years thanks to advances in Generative AI.'
 }
+];
 
 const rooms = new Map();
 
