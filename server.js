@@ -14,134 +14,170 @@ app.get('/health', (_, res) => res.send('OK'));
 
 const defaultQuestions = [
   {
-    question: 'What does ESD stand for in electronics manufacturing?',
-    options: ['Electrostatic Discharge', 'Electronic Software Design', 'Electrical Safety Device', 'Energy Storage Drive'],
-    answer: 0,
-    explanation: 'ESD means Electrostatic Discharge. It can damage sensitive electronic components if not controlled using wrist straps, ESD flooring, ionizers, and proper handling practices.'
-  },
-  {
-    question: 'Which action is best before handling an electronic PCB?',
-    options: ['Touch the PCB directly', 'Wear an ESD wrist strap and verify grounding', 'Keep the PCB on normal plastic cover', 'Use cotton gloves only'],
-    answer: 1,
-    explanation: 'The safest practice is to wear a verified ESD wrist strap and ensure proper grounding before handling sensitive electronic assemblies.'
-  },
-  {
-    question: 'What is the purpose of Daily Layered Review in manufacturing?',
-    options: ['Only attendance tracking', 'Structured review of SQCD topics at different leadership layers', 'Replacing quality audits', 'Only machine cleaning'],
-    answer: 1,
-    explanation: 'Daily Layered Review supports structured escalation and review of Safety, Quality, Cost, and Delivery topics across levels.'
-  },
-{
-    question: 'What does OEE stand for?',
-    options: ['Overall Equipment Effectiveness', 'Operational Engineering Efficiency', 'Overall Employee Evaluation', 'Output Efficiency Estimation'],
-    answer: 0,
-    explanation: 'OEE measures manufacturing productivity by considering Availability, Performance, and Quality.'
-},
-
-{
-    question: 'What does PDF stand for?',
-    options: ['Portable Data File', 'Personal Document Format', 'Portable Document Format', 'Public DOcument File'],
+    question: 'What is the main difference between Generative AI and Traditional AI?',
+    options: [
+      'Traditional AI uses machine learning, Generative AI does not',
+      'Traditional AI needs data, Generative AI does not',
+      'Traditional AI predicts, while Generative AI creates new content',
+      'Traditional AI only works offline'
+    ],
     answer: 2,
-    explanation: 'PDF stands for Portable Document Format.'
-},
-
+    explanation: 'Traditional AI commonly analyzes data, identifies patterns, classifies information, or makes predictions. Generative AI can create new content such as text, images, code, audio, and presentations.'
+  },
 {
-    question: 'If a rooster lays an egg on a rooftop, which side does it roll down?',
-    options: ['Left', 'Right', 'North', 'None'],
+  question: 'Which of the following are Generative AI tools?',
+  options: [
+    'ChatGPT only',
+    'ChatGPT and NotebookLM',
+    'ChatGPT, NotebookLM and GitHub Copilot',
+    'All of the above'
+  ],
+  answer: 3,
+  explanation: 'ChatGPT, NotebookLM, and GitHub Copilot are all examples of Generative AI tools designed to generate content, assist users, or provide intelligent recommendations.'
+},
+  {
+    question: 'Which prompt is likely to produce the best result?',
+    options: [
+      'Write an email with good content',
+      'Help me with this',
+      'Create a professional email inviting managers to an AI workshop next Friday at 10 AM',
+      'Generate text'
+    ],
+    answer: 2,
+    explanation: 'A prompt normally produces a better result when it clearly describes the task, audience, tone, date, time, and expected output.'
+  },
+  {
+    question: 'What is an AI hallucination?',
+    options: [
+      'AI stops working unexpectedly',
+      'AI learns without data',
+      'AI generates information that sounds correct but is actually false',
+      'AI refuses to answer questions'
+    ],
+    answer: 2,
+    explanation: 'An AI hallucination occurs when an AI system produces incorrect or unsupported information that may sound convincing.'
+  },
+  {
+    question: 'Which task would benefit MOST from Generative AI?',
+    options: [
+      'Calculating monthly salary, and giving a list of how to spend it',
+      'Generating a first draft of a project presentation',
+      'Measuring room temperature',
+      'Asking manager for a hike'
+    ],
+    answer: 1,
+    explanation: 'Generative AI is useful for creating a first draft of presentation content, including an outline, slide titles, key points, and speaker notes.'
+  },
+  {
+    question: 'Which statement is TRUE?',
+    options: [
+      'AI is always correct',
+      'AI output should be verified by humans',
+      'AI eliminates the need for critical thinking',
+      'AI understands information exactly like humans'
+    ],
+    answer: 1,
+    explanation: 'AI-generated output should be reviewed and verified, especially when it contains important business, technical, legal, financial, or safety-related information.'
+  },
+{
+  question: 'You need to analyze an Excel file with 50,000 rows and quickly identify trends, outliers, and insights. Which AI tool is most suitable?',
+  options: [
+    'ChatGPT',
+    'Gemini',
+    'Copilot',
+    'Perplexity'
+  ],
+  answer: 2,
+  explanation: 'Copilot is integrated directly into Excel and can analyze data, identify trends, and generate insights within the workbook.'
+},
+  {
+    question: 'Which use case is MOST suitable for Copilot?',
+    options: [
+    'Finding the latest AI research papers with citations',
+    'Generating code suggestions inside Visual Studio',
+    'Creating a presentation from an existing Word document',
+    'Generating AI images from text prompts'
+    ],
+    answer: 2,
+    explanation: 'Copilot is tightly integrated with Microsoft 365 and can create PowerPoint presentations from Word documents and other Microsoft 365 content.'
+  },
+  {
+    question: 'Which of the following is NOT considered Generative AI content?',
+    options: [
+      'AI-generated image',
+      'AI-generated presentation',
+      'AI-generated code',
+      'Automated sales report dashboard refresh'
+    ],
     answer: 3,
-    explanation: 'Roosters do not lay eggs.'
-},
-{
-    question: 'Which country originated the 5S workplace organization methodology?',
-    options: ['Germany', 'Japan', 'United States', 'India'],
-    answer: 1,
-    explanation: '5S originated in Japan as part of the Toyota Production System. The five principles are Sort, Set in Order, Shine, Standardize, and Sustain.'
-},
+    explanation: 'Refreshing a dashboard is primarily an automation or data-processing task. It does not necessarily involve generating new content using Generative AI.'
+  },
   {
-question: 'What is the largest ocean on Earth?',
-options: ['Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean', 'Arctic Ocean'],
-answer: 2,
-explanation: 'The Pacific Ocean is the largest and deepest ocean on Earth.'
-},
-
-{
-    question: 'Which country is widely recognized as the birthplace of Lean Manufacturing?',
-    options: ['China', 'Japan', 'Germany', 'Sweden'],
-    answer: 1,
-    explanation: 'Lean Manufacturing evolved from the Toyota Production System developed in Japan.'
-},
-{
-question: 'The more you take away from me, the bigger I become. What am I?',
-options: ['Mountain', 'Hole', 'River', 'Cloud'],
-answer: 1,
-explanation: 'The more you dig from a hole, the larger it becomes.'
-},
-{
-    question: 'Which country invented the modern assembly line concept used in mass production?',
-    options: ['Germany', 'Japan', 'USA', 'Italy'],
-    answer: 2,
-    explanation: 'Henry Ford popularized the moving assembly line in the United States, revolutionizing manufacturing.'
-},
-{
-question: 'Which of these is considered as a good meeting etiquette?',
-options: ['Interrupting others', 'Keeping your microphone muted when not speaking', 'Joining 10 minutes late and giving convincible reasons', 'None'],
-answer: 1,
-explanation: 'Whenever we attend any meeting, we must make sure we keep our microphone muted when not speaking, so that we donot disturb others'
-},
-{
-    question: 'Which country has the highest number of time zones?',
-    options: ['Russia', 'USA', 'France', 'China'],
-    answer: 2,
-    explanation: 'Due to its overseas territories, France spans 12 official time zones.'
-},
-  
-{
-    question: 'What was the first product manufactured by Bosch?',
-    options: ['Spark Plug', 'Low-voltage Magneto', 'Headlamp', 'Starter Motor'],
-    answer: 1,
-    explanation: 'Robert Bosch founded his workshop in 1886 and became successful with the low-voltage magneto for gas engines.'
-},
-
-{
-question: 'Before Mount Everest was discovered, what was the highest mountain in the world?',
-options: ['K2', 'Kangchenjunga', 'Mount Everest', 'Makalu'],
-answer: 2,
-explanation: 'Mount Everest was still the highest mountain even before it was discovered.'
-},
-{
-    question: 'What does a barcode primarily provide?',
-    options: ['Decoration', 'Traceability', 'Security Camera Feed', 'Machine Speed'],
-    answer: 1,
-    explanation: 'Barcodes allow products and materials to be tracked throughout the manufacturing process.'
-},
-
-{
-    question: 'Which famous scientist worked as a patent examiner before becoming world-famous?',
-    options: ['Newton', 'Einstein', 'Tesla', 'Galileo'],
-    answer: 1,
-    explanation: 'Albert Einstein worked at the Swiss Patent Office before publishing his groundbreaking theories.'
-},
-
-{
-question: 'How many birthdays does the average person have?',
-options: ['One per year', '10', '50', 'One'],
-answer: 3,
-explanation: 'A person is only born once, so they have one birthday.'
-},
-
- {
-question: 'Which English word contains all five vowels in alphabetical order?',
-options: ['Education', 'Beautiful', 'Question', 'Facetious'],
-answer: 3,
-explanation: 'Facetious contains all five vowels (a, e, i, o, u) in alphabetical order.'
-},
+    question: 'Why do detailed prompts often perform better?',
+    options: [
+      'They reduce ambiguity',
+      'They increase internet speed',
+      'They reduce AI processing power',
+      'They guarantee perfect answers'
+    ],
+    answer: 0,
+    explanation: 'Detailed prompts reduce ambiguity by giving the AI clearer instructions, context, constraints, audience information, and an expected output format.'
+  },
   {
-question: 'A plane crashes on the border between India and Nepal. Where do you bury the survivors?',
-options: ['India', 'Nepal', 'Both Countries', 'Nowhere'],
-answer: 3,
-explanation: 'You do not bury survivors. They survived.'
-},
-];
+    question: 'Which industry is least likely to benefit from AI?',
+    options: [
+      'Manufacturing',
+      'Healthcare',
+      'Finance',
+      'All of the above'
+    ],
+    answer: 3,
+    explanation: 'Manufacturing, healthcare, and finance can all benefit from appropriate AI applications. The value depends on the specific problem, available data, controls, and implementation.'
+  },
+  {
+    question: 'Your manager asks for a 10-slide presentation tomorrow. What should AI help you with first?',
+    options: [
+      'Creating the first draft',
+      'Making final decisions',
+      'Approving the presentation',
+      'Presenting to customers'
+    ],
+    answer: 0,
+    explanation: 'AI can quickly help create the first draft, structure the presentation, suggest slide titles, and generate initial content. A person should review and finalize it.'
+  },
+  {
+    question: 'Which action makes AI output MOST reliable?',
+    options: [
+      'Giving more context and verifying the result',
+      'Using fewer words',
+      'Avoiding questions',
+      'Typing in all capital letters'
+    ],
+    answer: 0,
+    explanation: 'Relevant context helps the AI understand the task. Human verification is still necessary because detailed prompts do not guarantee that every answer will be correct.'
+  },
+  {
+    question: 'Which task is AI LEAST likely to fully replace?',
+    options: [
+    'Preparing monthly management reports',
+    'Analyzing customer feedback trends',
+    'Making high-stakes strategic business decisions',
+    'Creating project status updates'
+    ],
+    answer: 2,
+    explanation: 'Strategic decision-making requires accountability, organizational context, judgment, trade-off analysis, and human responsibility. AI can support the process but should not own the final decision.'
+  },
+{
+  question: 'Which of the following tasks would have seemed almost impossible for everyday AI tools 10 years ago?',
+  options: [
+    'Generating realistic images from a text description',
+    'Playing chess',
+    'Sorting email inboxes',
+    'Spell checking'
+  ],
+  answer: 0,
+  explanation: 'AI image generation from simple text prompts became practical only in recent years thanks to advances in Generative AI.'
+}
 
 const rooms = new Map();
 
