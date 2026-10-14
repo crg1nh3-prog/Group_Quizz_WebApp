@@ -542,9 +542,15 @@ if (summary.quizEnded) {
 
         <br>
 
-        <button id="retakeQuizBtn">
-          Retake Quiz
-        </button>
+<button id="showAnswersBtn">
+  📖 Review Answers
+</button>
+
+<br><br>
+
+<button id="retakeQuizBtn">
+  Retake Quiz
+</button>
 
       </div>
     `;
@@ -559,6 +565,40 @@ if (summary.quizEnded) {
 
         socket.emit('player:retake', { roomId });
       });
+  document
+  .getElementById('showAnswersBtn')
+  ?.addEventListener('click', () => {
+
+    const questions = summary.questions || [];
+
+    const answersHtml = questions
+      .map((q, index) => `
+        <div style="
+          border:1px solid #ddd;
+          padding:12px;
+          margin-bottom:12px;
+          border-radius:8px;
+          background:#f8fff8;
+          text-align:left;
+        ">
+          <b>Q${index + 1}:</b> ${q.question}
+          <br><br>
+
+          ✅ <b>Correct Answer:</b>
+          ${letter(q.answer)}. ${q.options[q.answer]}
+
+          <br><br>
+
+          💡 ${q.explanation || ''}
+        </div>
+      `)
+      .join('');
+
+    $('playerOptions').innerHTML = `
+      <h2>✅ Complete Answer Key</h2>
+      ${answersHtml}
+    `;
+  });
 
     return;
   }
