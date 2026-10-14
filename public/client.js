@@ -209,8 +209,75 @@ $('startQuiz').onclick = () => {
 };
 
 $('revealAnswer').onclick = () => {
+  if (latest?.quizEnded) {
+    showAllCorrectAnswers();
+    return;
+  }
+
   socket.emit('host:reveal', { roomId });
 };
+
+function showAllCorrectAnswers() {
+
+  const questions =
+    latest?.questions?.length > 0
+      ? latest.questions
+      : hostQuestions;
+
+  if (!questions || questions.length === 0) {
+    $('hostOptions').innerHTML = `
+      <div class="explanation">
+        No questions available.
+      </div>
+    `;
+    return;
+  }
+
+  const allAnswersHtml = questions
+    .map((question, index) => {
+
+      const answerIndex = Number(question.answer);
+
+      return `
+        <div style="
+          border:1px solid #ddd;
+          padding:12px;
+          margin-bottom:12px;
+          border-radius:8px;
+          background:#f8fff8;
+        ">
+          <b>Q${index + 1}:</b>
+          ${esc(question.question)}
+
+          <br><br>
+
+          ✅ <b>Correct Answer:</b>
+          ${letter(answerIndex)}.
+          ${esc(question.options[answerIndex])}
+
+          <br><br>
+
+          💡 ${esc(question.explanation || 'No explanation available')}
+        </div>
+      `;
+    })
+    .join('');
+
+  $('hostQuestion').textContent =
+    '✅ Complete Answer Key';
+
+  $('hostOptions').innerHTML = `
+    <div>
+      <h3>All Correct Answers</h3>
+      ${allAnswersHtml}
+    </div>
+  `;
+
+  $('bars').innerHTML = '';
+
+  $('hostExplanation').classList.add('hidden');
+  $('hostExplanation').innerHTML = '';
+}
 
 $('nextQuestion').onclick = () => {
   socket.emit('host:next', { roomId });
@@ -219,6 +286,7 @@ $('nextQuestion').onclick = () => {
 $('clearForm').onclick = cleanForm;
 
 $('saveQuestion').onclick = () => {
+
   const q = getFormQuestion();
 
   if (!q) return;
@@ -236,7 +304,6 @@ $('saveQuestion').onclick = () => {
 
 socket.on('room:update', summary => {
   latest = summary;
-
   if (role === 'host') {
     hostQuestions = summary.questions || hostQuestions;
     saveQuestionsLocally();
@@ -261,55 +328,72 @@ function render(summary) {
 }
 
 function renderHost(summary, q) {
-  if (summary.quizEnded) {
-    $('progress').textContent =
-      `${summary.totalQuestions}/${summary.totalQuestions}`;
+ if (summary.quizEnded) {
+  $('progress').textContent =
+    `${summary.totalQuestions}/${summary.totalQuestions}`;
 
-    $('hostQuestion').textContent = '🎉 Quiz Completed!';
+  $('hostQuestion').textContent = '🎉 Quiz Completed!';
 
-    $('hostOptions').innerHTML = `
-      <div class="explanation">
-        The quiz is completed. Scores are shown below.
-      </div>
-    `;
+  $('hostOptions').innerHTML = `
+    <div class="explanation">
+      <b>The quiz is completed.</b>
+      <br><br>
+      Scores are shown below.
+      Click <b>Show Answer</b> to display the correct
+      answers for all ${summary.totalQuestions} questions.
+    </div>
+  `;
 
-    $('bars').innerHTML = '';
-    $('hostExplanation').classList.add('hidden');
+  $('bars').innerHTML = '';
 
-    $('participants').innerHTML =
-  `
+  $('hostExplanation').classList.add('hidden');
+  $('hostExplanation').innerHTML = '';
+
+  const leaderboard = summary.leaderboard || [];
+
+  $('participants').innerHTML = `
     <h3>🏆 Final Leaderboard</h3>
 
     ${
-      summary.leaderboard
-        .map((player, index) => {
+      leaderboard.length > 0
+        ? leaderboard
+            .map((player, index) => {
+              const medal =
+                index === 0
+                  ? '🥇'
+                  : index === 1
+                  ? '🥈'
+                  : index === 2
+                  ? '🥉'
+                  : '🏅';
 
-          const medal =
-            index === 0 ? '🥇' :
-            index === 1 ? '🥈' :
-            index === 2 ? '🥉' :
-            '🏅';
+              return `
+                <div style="
+                  display:flex;
+                  justify-content:space-between;
+                  align-items:center;
+                  padding:10px;
+                  margin:5px 0;
+                  border:1px solid #ddd;
+                  border-radius:8px;
+                ">
+                  <span>
+                    ${medal} ${esc(player.name)}
+                  </span>
 
-          return `
-            <div style="
-              padding:10px;
-              margin:5px 0;
-              border:1px solid #ddd;
-              border-radius:8px;
-            ">
-              ${medal}
-              ${esc(player.name)}
-              -
-              <b>${player.score}/${summary.totalQuestions}</b>
-            </div>
-          `;
-        })
-        .join('')
+                  <b>
+                    ${player.score}/${summary.totalQuestions}
+                  </b>
+                </div>
+              `;
+            })
+            .join('')
+        : '<p class="muted">No scores available.</p>'
     }
   `;
-    return;
-  }
 
+  return;
+}
   $('progress').textContent =
     `${summary.currentIndex + 1}/${summary.totalQuestions}`;
 
