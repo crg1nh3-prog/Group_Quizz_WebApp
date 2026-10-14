@@ -129,7 +129,7 @@ const defaultQuestions = [
       'Manufacturing',
       'Healthcare',
       'Finance',
-      'All of the above'
+      'None of the above'
     ],
     answer: 3,
     explanation: 'Manufacturing, healthcare, and finance can all benefit from appropriate AI applications. The value depends on the specific problem, available data, controls, and implementation.'
