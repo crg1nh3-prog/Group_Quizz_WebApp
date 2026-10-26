@@ -435,64 +435,55 @@ io.on('connection', socket => {
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
-  socket.on('host:reveal', ({ roomId }, cb) => {
-    const room = rooms.get(String(roomId || '').toUpperCase());
-
-    if (!room || room.hostSocketId !== socket.id) {
-      return cb?.({ ok: false });
-    }
-
-    room.revealed = true;
-
-    cb?.({ ok: true });
-    io.to(room.roomId).emit('room:update', roomSummary(room));
-  });
-
   socket.on('host:next', ({ roomId }, cb) => {
-    const room = rooms.get(String(roomId || '').toUpperCase());
+  const room = rooms.get(String(roomId || '').toUpperCase());
 
-    if (!room || room.hostSocketId !== socket.id) {
-      return cb?.({ ok: false });
+  if (!room || room.hostSocketId !== socket.id) {
+    return cb?.({ ok: false });
+  }
+
+  if (room.quizEnded) {
+    return cb?.({ ok: false });
+  }
+
+  const q = room.questions[room.currentIndex];
+
+  if (!q) {
+    return cb?.({ ok: false });
+  }
+
+  // Calculate scores for the current question
+  Object.entries(room.responses).forEach(([playerId, selectedAnswer]) => {
+    if (selectedAnswer === q.answer) {
+      room.scores[playerId] =
+        (room.scores[playerId] || 0) + 1;
     }
-
-    if (room.quizEnded) {
-      return cb?.({ ok: false });
-    }
-
-    const q = room.questions[room.currentIndex];
-
-    Object.entries(room.responses).forEach(([playerId, answer]) => {
-      if (answer === q.answer) {
-        room.scores[playerId] =
-          (room.scores[playerId] || 0) + 1;
-      }
-    });
-
-if (room.currentIndex < room.questions.length - 1) {
-
-  room.currentIndex += 1;
-
-  room.started = true;
-  room.revealed = false;
-  room.responses = {};
-
-} else {
-
-  room.revealed = true;
-
-  setTimeout(() => {
-    room.quizEnded = true;
-    io.to(room.roomId).emit(
-      'room:update',
-      roomSummary(room)
-    );
-  }, 3000);
-
-}
-
-    cb?.({ ok: true });
-    io.to(room.roomId).emit('room:update', roomSummary(room));
   });
+
+  const isLastQuestion =
+    room.currentIndex === room.questions.length - 1;
+
+  if (isLastQuestion) {
+    // Finish immediately without briefly revealing the answer
+    room.quizEnded = true;
+    room.started = false;
+    room.revealed = false;
+  } else {
+    // Continue to the next question
+    room.currentIndex += 1;
+    room.started = true;
+    room.revealed = false;
+    room.responses = {};
+  }
+
+  cb?.({ ok: true });
+
+  // Send only the final state
+  io.to(room.roomId).emit(
+    'room:update',
+    roomSummary(room)
+  );
+});
 
   socket.on('player:retake', ({ roomId }, cb) => {
     const room = rooms.get(String(roomId || '').toUpperCase());
