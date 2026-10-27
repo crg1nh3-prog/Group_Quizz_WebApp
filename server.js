@@ -30,7 +30,7 @@ const defaultQuestions = [
     'ChatGPT only',
     'ChatGPT and NotebookLM',
     'ChatGPT, NotebookLM and GitHub Copilot',
-    'All of the above'
+    'ChatGPT and Google Search'
   ],
   answer: 3,
   explanation: 'ChatGPT, NotebookLM, and GitHub Copilot are all examples of Generative AI tools designed to generate content, assist users, or provide intelligent recommendations.'
