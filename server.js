@@ -32,7 +32,7 @@ const defaultQuestions = [
     'ChatGPT, NotebookLM and GitHub Copilot',
     'ChatGPT and Google Search'
   ],
-  answer: 3,
+  answer: 2,
   explanation: 'ChatGPT, NotebookLM, and GitHub Copilot are all examples of Generative AI tools designed to generate content, assist users, or provide intelligent recommendations.'
 },
   {
