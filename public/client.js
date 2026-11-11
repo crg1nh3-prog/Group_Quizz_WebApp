@@ -3,6 +3,7 @@ const socket = io(window.location.origin, {
   transports: ['websocket', 'polling'],
   upgrade: true,
   reconnection: true,
+  reconnectionAttempts
 
 const $ = id => document.getElementById(id);
 
