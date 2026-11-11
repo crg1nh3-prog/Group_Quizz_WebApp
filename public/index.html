@@ -6,7 +6,7 @@
   <title>Group Quiz Live</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
-    /* Instant CSS badges helper for the lobby players list */
+    /* Custom styling helper for player badges and review cards */
     .player-badge {
       background-color: #e9ecef;
       color: #495057;
@@ -22,10 +22,22 @@
       0% { transform: scale(0.7); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
+    .lobby-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: #0070f3;
+      text-decoration: none;
+      font-weight: bold;
+      word-break: break-all;
+    }
+    .lobby-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
   <div class="app">
+    <!-- Bosch Banner / Header -->
     <header class="main-header">
       <div>
         <p class="eyebrow">Interactive Group Quiz</p>
@@ -35,37 +47,51 @@
       <div class="pill" id="roomPill">No room</div>
     </header>
 
-    <!-- ==================== MAIN WELCOME SCREEN ==================== -->
+    <!-- ==================== HOME SCREEN ==================== -->
     <main id="home" class="hero-card">
       <div class="hero-content">
         <p class="eyebrow">Start here</p>
         <h2>Run a live quiz from your laptop</h2>
         <p>
-          Create a host room, show the QR code, and participants can join from their mobile browser.
+          Create a host room, show the QR code, and participants can join from their laptop or mobile browser.
         </p>
         
-        <!-- Room creation buttons (Make sure these correspond to your original buttons) -->
-        <div style="margin-top: 25px; display: flex; gap: 15px;">
+        <!-- Host Room Option -->
+        <div style="margin-top: 25px;">
           <button id="createRoomBtn" class="btn-primary" style="padding: 12px 24px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; background: #0070f3; color: white; border: none; font-weight: bold;">
             Create Host Room 💻
+          </button>
+        </div>
+
+        <hr style="border: 0; height: 1px; background: #eee; margin: 30px 0;" />
+
+        <!-- Manual Player Join Option (For Laptop Users) -->
+        <div style="max-width: 320px; margin: 0 auto;">
+          <p class="eyebrow">Or Join as Player</p>
+          <input type="text" id="manualRoom" placeholder="ENTER 6-LETTER ROOM CODE" style="width: 100%; padding: 10px; font-size: 1.1rem; text-align: center; border: 2px solid #ddd; border-radius: 8px; text-transform: uppercase; margin-bottom: 12px;" />
+          <button id="joinManual" class="secondary" style="width: 100%; padding: 10px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer;">
+            Join Room 🚪
           </button>
         </div>
       </div>
       <p id="joinError" class="error"></p>
     </main>
 
-    <!-- ==================== 1. NEW LOBBY SCREEN (For Host to display QR) ==================== -->
+    <!-- ==================== LOBBY SCREEN (For Host) ==================== -->
     <section id="lobby-screen" class="hero-card" style="display: none;">
       <div class="lobby-container" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #4CAF50; margin-bottom: 10px;">🎮 Live Quiz Lobby</h1>
-        <p style="font-size: 1.1rem; color: #555;">Scan the QR code below on your phone to join the room!</p>
+        <p style="font-size: 1.1rem; color: #555;">Scan the QR code or click the link below to join!</p>
         
-        <!-- QR Code Space -->
+        <!-- QR Code Wrapper -->
         <div id="qr-code-wrapper" style="margin: 25px 0;">
           <img id="lobby-qr-img" src="" alt="Lobby QR Code" style="border: 10px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-radius: 8px; max-width: 250px;" />
         </div>
         
-        <h2 style="margin: 10px 0;">Room Code: <span id="lobby-room-code" style="color: #007bff; letter-spacing: 2px;">------</span></h2>
+        <!-- Clickable Copyable Link -->
+        <a id="lobby-join-link" class="lobby-link" href="#" target="_blank">Loading link...</a>
+        
+        <h2 style="margin: 20px 0 10px 0;">Room Code: <span id="lobby-room-code" style="color: #007bff; letter-spacing: 2px;">------</span></h2>
         
         <hr style="border: 0; height: 1px; background: #eee; margin: 30px 0;" />
 
@@ -73,11 +99,11 @@
         <div class="players-box">
           <h3>Joined Players (<span id="lobby-player-count">0</span>)</h3>
           <div id="lobby-players-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px; min-height: 50px;">
-            <!-- Player name badges will dynamically load here -->
+            <!-- Player name badges load dynamically -->
           </div>
         </div>
 
-        <!-- Host Controls -->
+        <!-- Host Start Game Controls -->
         <div id="host-controls" style="margin-top: 30px; display: none;">
           <button id="start-game-btn" style="background-color: #28a745; color: white; border: none; padding: 15px 40px; font-size: 1.2rem; border-radius: 30px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             Start Game 🚀
@@ -86,7 +112,7 @@
       </div>
     </section>
 
-    <!-- ==================== 2. NEW PLAYER SIGN-IN SCREEN (Seen by scanning phone) ==================== -->
+    <!-- ==================== PLAYER SIGN-IN SCREEN ==================== -->
     <section id="player-join-screen" class="hero-card" style="display: none;">
       <div class="join-container" style="text-align: center; max-width: 400px; margin: 50px auto auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); background: #ffffff;">
         <h2 style="margin-bottom: 10px; color: #333;">Ready to Play? 🏆</h2>
@@ -107,21 +133,16 @@
       <aside class="card host-sidebar">
         <div class="section-title">
           <p class="eyebrow">Host Control</p>
-          <h2>Quiz Room</h2>
+          <h2>Quiz Panel</h2>
         </div>
-        <div class="room-code-box">
-          <span>Room Code</span>
-          <strong id="hostRoomCode"></strong>
-        </div>
-        <img id="qr" class="qr" alt="Quiz QR code" />
-        <a id="joinLink" class="join-link" target="_blank" rel="noreferrer">
-          Open participant link
-        </a>
-        <div class="host-buttons">
+        
+        <!-- Clean Host Controls: Only essential buttons -->
+        <div class="host-buttons" style="margin-top: 20px;">
           <button id="startQuiz">Start / Restart</button>
           <button id="revealAnswer" class="accent">Show Answer</button>
           <button id="nextQuestion" class="secondary">Next Question</button>
         </div>
+        
         <div class="mini-info">
           <div>
             <span>Participants</span>
@@ -148,6 +169,8 @@
           <div id="participants" class="chips"></div>
           <div id="hostExplanation" class="explanation hidden"></div>
         </section>
+        
+        <!-- Question manager -->
         <section class="card manager-card">
           <div class="manager-header">
             <div>
