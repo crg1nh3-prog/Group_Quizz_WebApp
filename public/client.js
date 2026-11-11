@@ -17,6 +17,21 @@ let hostQuestions = JSON.parse(
 );
 let editingIndex = null;
 
+// CONNECTION STATUS MONITOR
+socket.on('connect', () => {
+  console.log('Successfully connected to quiz server!');
+  const errEl = $('joinError');
+  if (errEl) errEl.textContent = ''; 
+});
+
+socket.on('connect_error', (err) => {
+  console.error('Socket connection error:', err);
+  const errEl = $('joinError');
+  if (errEl) {
+    errEl.textContent = '🔌 Connecting to server... (Render might be spinning up, please wait)';
+  }
+});
+
 function saveQuestionsLocally() {
   localStorage.setItem(
     'quizQuestions',
@@ -30,13 +45,13 @@ function show(id) {
     const el = $(x);
     if (el) {
       el.classList.add('hidden');
-      el.style.display = 'none'; // Explicitly hide
+      el.style.display = 'none'; 
     }
   });
   const target = $(id);
   if (target) {
     target.classList.remove('hidden');
-    target.style.display = 'block'; // Explicitly show
+    target.style.display = 'block'; 
   }
 }
 
@@ -129,22 +144,23 @@ function syncQuestionsToServer() {
   );
 }
 
-// ==================== CLICK EVENT HANDLERS (WITH SAFETY CHECKS) ====================
+// ==================== ALL BUTTON EVENT HANDLERS ====================
 
-// 1. Create Host Room Button Click
-const createRoomBtn = $('createRoomBtn');
-if (createRoomBtn) {
-  createRoomBtn.onclick = () => {
+// 1. Host Room Setup (Supports BOTH "createRoomBtn" and "createHost" HTML Button IDs)
+const createBtn = \$('createRoomBtn') || \$('createHost');
+if (createBtn) {
+  createBtn.onclick = () => {
     if (!socket.connected) {
-      alert("🔌 Connecting to server... Please wait a moment for Render to spin up your free service (this takes ~50 seconds on first load)!");
+      alert("🔌 Still establishing connection to the server. Please wait ~45 seconds for Render to spin up your free server!");
       return;
     }
+
     socket.emit('host:create', {}, async res => {
       if (!res || !res.ok) return;
       roomId = res.summary.roomId;
       role = 'host';
 
-      // Store details for browser reload recovery
+      // Store details for reload persistence
       sessionStorage.setItem('quiz_roomId', roomId);
       sessionStorage.setItem('quiz_role', role);
       history.replaceState(null, '', `/?room=${roomId}&role=host`);
@@ -153,7 +169,7 @@ if (createRoomBtn) {
       if (\$('roomPill')) \$('roomPill').textContent = `Room ${roomId}`;
       if (\$('lobby-room-code')) \$('lobby-room-code').textContent = roomId;
 
-      // Fetch dynamic QR & Join URL
+      // Fetch dynamic QR code
       const qr = await fetch(`/api/room/${roomId}/qr`).then(r => r.json());
       if (\$('lobby-qr-img')) \$('lobby-qr-img').src = qr.dataUrl;
       if ($('lobby-join-link')) {
@@ -179,9 +195,9 @@ if (createRoomBtn) {
 const joinManualBtn = $('joinManual');
 if (joinManualBtn) {
   joinManualBtn.onclick = () => {
-    const manualRoomInput = $('manualRoom');
-    if (manualRoomInput) {
-      roomId = manualRoomInput.value.trim().toUpperCase();
+    const manualInput = $('manualRoom');
+    if (manualInput) {
+      roomId = manualInput.value.trim().toUpperCase();
       if (roomId) {
         role = 'player';
         sessionStorage.setItem('quiz_roomId', roomId);
@@ -194,10 +210,10 @@ if (joinManualBtn) {
 }
 
 // 3. Player Click to Join
-const joinLobbyBtn = $('join-lobby-btn');
+const joinLobbyBtn = \$('join-lobby-btn') || \$('confirmJoin');
 if (joinLobbyBtn) {
   joinLobbyBtn.onclick = () => {
-    const nameInput = $('player-name-input');
+    const nameInput = \$('player-name-input') || \$('playerName');
     if (nameInput) {
       const nameVal = nameInput.value.trim();
       if (nameVal) {
@@ -210,6 +226,11 @@ if (joinLobbyBtn) {
 function joinPlayer(nameToRegister) {
   const name = nameToRegister || 'Guest';
   
+  if (!socket.connected) {
+    alert("🔌 Connecting to server... Please wait.");
+    return;
+  }
+
   socket.emit(
     'player:join',
     {
@@ -218,7 +239,8 @@ function joinPlayer(nameToRegister) {
     },
     res => {
       if (!res || !res.ok) {
-        if (\$('joinError')) \$('joinError').textContent = res?.error || 'Unable to join quiz.';
+        const errEl = $('joinError');
+        if (errEl) errEl.textContent = res?.error || 'Unable to join quiz.';
         return;
       }
       sessionStorage.setItem('quiz_roomId', roomId);
@@ -232,7 +254,7 @@ function joinPlayer(nameToRegister) {
   );
 }
 
-// Auto-Reconnection Lifecycle on Refresh
+// Reconnection Lifecycle on Refresh
 if (roomId && role === 'player') {
   if (savedName) {
     joinPlayer(savedName);
@@ -254,7 +276,7 @@ if (roomId && role === 'player') {
 }
 
 // Host starts the game
-const startGameBtn = $('start-game-btn');
+const startGameBtn = \$('start-game-btn') || \$('startQuiz');
 if (startGameBtn) {
   startGameBtn.onclick = () => {
     socket.emit('host:start', { roomId });
@@ -739,9 +761,4 @@ function renderQuestionManager() {
               <div class="question-number">${i + 1}</div>
               <div>
                 <h4>${esc(q.question)}</h4>
-                <p>Correct: <b>\${letter(q.answer)}. \${esc(q.options[q.answer])}</b></p>
-              </div>
-            </div>
-            <div class="question-actions">
-              <button class="tiny secondary" onclick="moveQuestion(${i}, -1)">↑</button>
-              <button class="tiny secondary" o
+                <p>Correct: <b>\${letter(q.answer)}. \${esc(q.options[q.answer])}
