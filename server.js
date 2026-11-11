@@ -6,7 +6,6 @@ const QRCode = require('qrcode');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
-
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static('public'));
@@ -24,17 +23,17 @@ const defaultQuestions = [
     answer: 2,
     explanation: 'Traditional AI commonly analyzes data, identifies patterns, classifies information, or makes predictions. Generative AI can create new content such as text, images, code, audio, and presentations.'
   },
-{
-  question: 'Which of the following are Generative AI tools?',
-  options: [
-    'ChatGPT only',
-    'ChatGPT and NotebookLM',
-    'ChatGPT, NotebookLM and GitHub Copilot',
-    'ChatGPT and Google Search'
-  ],
-  answer: 2,
-  explanation: 'ChatGPT, NotebookLM, and GitHub Copilot are all examples of Generative AI tools designed to generate content, assist users, or provide intelligent recommendations.'
-},
+  {
+    question: 'Which of the following are Generative AI tools?',
+    options: [
+      'ChatGPT only',
+      'ChatGPT and NotebookLM',
+      'ChatGPT, NotebookLM and GitHub Copilot',
+      'ChatGPT and Google Search'
+    ],
+    answer: 2,
+    explanation: 'ChatGPT, NotebookLM, and GitHub Copilot are all examples of Generative AI tools designed to generate content, assist users, or provide intelligent recommendations.'
+  },
   {
     question: 'Which prompt is likely to produce the best result?',
     options: [
@@ -79,24 +78,24 @@ const defaultQuestions = [
     answer: 1,
     explanation: 'AI-generated output should be reviewed and verified, especially when it contains important business, technical, legal, financial, or safety-related information.'
   },
-{
-  question: 'You need to analyze an Excel file with 50,000 rows and quickly identify trends, outliers, and insights. Which AI tool is most suitable?',
-  options: [
-    'ChatGPT',
-    'Gemini',
-    'Copilot',
-    'Perplexity'
-  ],
-  answer: 2,
-  explanation: 'Copilot is integrated directly into Excel and can analyze data, identify trends, and generate insights within the workbook.'
-},
+  {
+    question: 'You need to analyze an Excel file with 50,000 rows and quickly identify trends, outliers, and insights. Which AI tool is most suitable?',
+    options: [
+      'ChatGPT',
+      'Gemini',
+      'Copilot',
+      'Perplexity'
+    ],
+    answer: 2,
+    explanation: 'Copilot is integrated directly into Excel and can analyze data, identify trends, and generate insights within the workbook.'
+  },
   {
     question: 'Which use case is MOST suitable for Copilot?',
     options: [
-    'Finding the latest AI research papers with citations',
-    'Generating code suggestions inside Visual Studio',
-    'Creating a presentation from an existing Word document',
-    'Generating AI images from text prompts'
+      'Finding the latest AI research papers with citations',
+      'Generating code suggestions inside Visual Studio',
+      'Creating a presentation from an existing Word document',
+      'Generating AI images from text prompts'
     ],
     answer: 2,
     explanation: 'Copilot is tightly integrated with Microsoft 365 and can create PowerPoint presentations from Word documents and other Microsoft 365 content.'
@@ -159,25 +158,25 @@ const defaultQuestions = [
   {
     question: 'Which task is AI LEAST likely to fully replace?',
     options: [
-    'Preparing monthly management reports',
-    'Analyzing customer feedback trends',
-    'Making high-stakes strategic business decisions',
-    'Creating project status updates'
+      'Preparing monthly management reports',
+      'Analyzing customer feedback trends',
+      'Making high-stakes strategic business decisions',
+      'Creating project status updates'
     ],
     answer: 2,
     explanation: 'Strategic decision-making requires accountability, organizational context, judgment, trade-off analysis, and human responsibility. AI can support the process but should not own the final decision.'
   },
-{
-  question: 'Which of the following tasks would have seemed almost impossible for everyday AI tools 10 years ago?',
-  options: [
-    'Generating realistic images from a text description',
-    'Playing chess',
-    'Sorting email inboxes',
-    'Spell checking'
-  ],
-  answer: 0,
-  explanation: 'AI image generation from simple text prompts became practical only in recent years thanks to advances in Generative AI.'
-}
+  {
+    question: 'Which of the following tasks would have seemed almost impossible for everyday AI tools 10 years ago?',
+    options: [
+      'Generating realistic images from a text description',
+      'Playing chess',
+      'Sorting email inboxes',
+      'Spell checking'
+    ],
+    answer: 0,
+    explanation: 'AI image generation from simple text prompts became practical only in recent years thanks to advances in Generative AI.'
+  }
 ];
 
 const rooms = new Map();
@@ -189,23 +188,19 @@ function cloneQuestions(qs) {
 function createRoomId() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let id = '';
-
   for (let i = 0; i < 6; i++) {
     id += chars[Math.floor(Math.random() * chars.length)];
   }
-
   return id;
 }
 
 function sanitizeQuestions(questions) {
   if (!Array.isArray(questions)) return [];
-
   return questions
     .map(q => {
       const options = Array.isArray(q.options)
         ? q.options.map(x => String(x || '').trim()).filter(Boolean)
         : [];
-
       return {
         question: String(q.question || '').trim(),
         options,
@@ -226,11 +221,9 @@ function sanitizeQuestions(questions) {
 
 function newRoom(hostSocketId) {
   let roomId = createRoomId();
-
   while (rooms.has(roomId)) {
     roomId = createRoomId();
   }
-
   rooms.set(roomId, {
     roomId,
     hostSocketId,
@@ -241,9 +234,9 @@ function newRoom(hostSocketId) {
     quizEnded: false,
     participants: {},
     responses: {},
-    scores: {}
+    scores: {},
+    historicalResponses: [] // Records answers per question: [ { questionIndex: 0, responses: { socketId: selectedOption } } ]
   });
-
   return rooms.get(roomId);
 }
 
@@ -259,7 +252,6 @@ function roomSummary(room) {
     Object.values(room.responses).filter(v => v === i).length
   );
 
-  // Leaderboard (highest score → lowest score)
   const leaderboard = Object.entries(room.scores)
     .map(([playerId, score]) => ({
       playerId,
@@ -268,53 +260,43 @@ function roomSummary(room) {
     }))
     .sort((a, b) => b.score - a.score);
 
-  // Winner
-const winner =
-room.quizEnded && leaderboard.length > 0
-? leaderboard[0]
-: null;
+  const winner = room.quizEnded && leaderboard.length > 0 ? leaderboard[0] : null;
 
-return {
-roomId: room.roomId,
-currentIndex: room.currentIndex,
-totalQuestions: room.questions.length,
-questions: room.questions,
-started: room.started,
-revealed: room.revealed,
-quizEnded: room.quizEnded,
-  
-scores: room.scores,
-
-leaderboard: room.quizEnded ? leaderboard : [],
-winner,
- 
-question: q,
-responses: room.responses,
-counts,
-participants: Object.values(room.participants)
-};
+  return {
+    roomId: room.roomId,
+    currentIndex: room.currentIndex,
+    totalQuestions: room.questions.length,
+    questions: room.questions,
+    started: room.started,
+    revealed: room.revealed,
+    quizEnded: room.quizEnded,
+    scores: room.scores,
+    leaderboard: room.quizEnded ? leaderboard : [],
+    winner,
+    question: q,
+    responses: room.responses,
+    counts,
+    historicalResponses: room.historicalResponses, // Include participant answer history in the client summary payload
+    participants: Object.values(room.participants)
+  };
 }
 
 async function qrForRoom(req, roomId) {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
   const joinUrl = `${baseUrl}/?room=${roomId}&role=player`;
-
   const dataUrl = await QRCode.toDataURL(joinUrl, {
     margin: 1,
     width: 320
   });
-
   return { joinUrl, dataUrl };
 }
 
 app.get('/api/room/:roomId/qr', async (req, res) => {
   try {
     const room = rooms.get(String(req.params.roomId || '').toUpperCase());
-
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
     }
-
     const qr = await qrForRoom(req, room.roomId);
     res.json(qr);
   } catch (err) {
@@ -323,30 +305,26 @@ app.get('/api/room/:roomId/qr', async (req, res) => {
 });
 
 io.on('connection', socket => {
+  
   socket.on('host:create', async (_, cb) => {
     const room = newRoom(socket.id);
     socket.join(room.roomId);
-
     cb?.({ ok: true, summary: roomSummary(room) });
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
   socket.on('host:loadQuestions', ({ roomId, questions }, cb) => {
     const room = rooms.get(String(roomId || '').toUpperCase());
-
     if (!room || room.hostSocketId !== socket.id) {
       return cb?.({ ok: false, error: 'Host room not found' });
     }
-
     const cleanQuestions = sanitizeQuestions(questions);
-
     if (!cleanQuestions.length) {
       return cb?.({
         ok: false,
         error: 'Please add at least one valid question.'
       });
     }
-
     room.questions = cleanQuestions;
     room.currentIndex = 0;
     room.started = false;
@@ -354,22 +332,47 @@ io.on('connection', socket => {
     room.quizEnded = false;
     room.responses = {};
     room.scores = {};
-
+    room.historicalResponses = [];
     cb?.({ ok: true, summary: roomSummary(room) });
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
   socket.on('player:join', ({ roomId, name }, cb) => {
-    const room = rooms.get(String(roomId || '').toUpperCase());
-
+    const rId = String(roomId || '').toUpperCase();
+    const room = rooms.get(rId);
     if (!room) {
       return cb?.({
         ok: false,
         error: 'Quiz room not found. Please check the QR code or room code.'
       });
     }
-
     socket.join(room.roomId);
+
+    // Persistent Session Check: If a player with this name already exists in this room,
+    // link this new socket connection to the existing participant data (scores/answers).
+    let existingPlayerId = Object.keys(room.participants).find(
+      id => room.participants[id].name.toLowerCase() === String(name).toLowerCase()
+    );
+
+    if (existingPlayerId) {
+      // Re-map scores to this new socket connection
+      if (room.scores[existingPlayerId] !== undefined) {
+        room.scores[socket.id] = room.scores[existingPlayerId];
+        delete room.scores[existingPlayerId];
+      }
+      if (room.responses[existingPlayerId] !== undefined) {
+        room.responses[socket.id] = room.responses[existingPlayerId];
+        delete room.responses[existingPlayerId];
+      }
+      // Re-map historical answers
+      room.historicalResponses.forEach(step => {
+        if (step.responses[existingPlayerId] !== undefined) {
+          step.responses[socket.id] = step.responses[existingPlayerId];
+          delete step.responses[existingPlayerId];
+        }
+      });
+      delete room.participants[existingPlayerId];
+    }
 
     room.participants[socket.id] = {
       id: socket.id,
@@ -381,13 +384,11 @@ io.on('connection', socket => {
       participantId: socket.id,
       summary: roomSummary(room)
     });
-
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
   socket.on('player:answer', ({ roomId, optionIndex }, cb) => {
     const room = rooms.get(String(roomId || '').toUpperCase());
-
     if (
       !room ||
       !room.started ||
@@ -396,109 +397,101 @@ io.on('connection', socket => {
     ) {
       return cb?.({ ok: false });
     }
-
     const q = room.questions[room.currentIndex];
     const selected = Number(optionIndex);
-
     if (!q || selected < 0 || selected >= q.options.length) {
       return cb?.({ ok: false });
     }
-
     if (!room.participants[socket.id]) {
       room.participants[socket.id] = {
         id: socket.id,
         name: 'Guest'
       };
     }
-
     room.responses[socket.id] = selected;
-
     cb?.({ ok: true });
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
   socket.on('host:start', ({ roomId }, cb) => {
     const room = rooms.get(String(roomId || '').toUpperCase());
-
     if (!room || room.hostSocketId !== socket.id) {
       return cb?.({ ok: false });
     }
-
     room.currentIndex = 0;
     room.started = true;
     room.revealed = false;
     room.quizEnded = false;
     room.responses = {};
     room.scores = {};
+    room.historicalResponses = [];
+    cb?.({ ok: true });
+    io.to(room.roomId).emit('room:update', roomSummary(room));
+  });
 
+  socket.on('host:reveal', ({ roomId }, cb) => {
+    const room = rooms.get(String(roomId || '').toUpperCase());
+    if (!room || room.hostSocketId !== socket.id) {
+      return cb?.({ ok: false });
+    }
+    room.revealed = true;
     cb?.({ ok: true });
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
 
   socket.on('host:next', ({ roomId }, cb) => {
-  const room = rooms.get(String(roomId || '').toUpperCase());
-
-  if (!room || room.hostSocketId !== socket.id) {
-    return cb?.({ ok: false });
-  }
-
-  if (room.quizEnded) {
-    return cb?.({ ok: false });
-  }
-
-  const q = room.questions[room.currentIndex];
-
-  if (!q) {
-    return cb?.({ ok: false });
-  }
-
-  // Calculate scores for the current question
-  Object.entries(room.responses).forEach(([playerId, selectedAnswer]) => {
-    if (selectedAnswer === q.answer) {
-      room.scores[playerId] =
-        (room.scores[playerId] || 0) + 1;
-    }
-  });
-
-  const isLastQuestion =
-    room.currentIndex === room.questions.length - 1;
-
-  if (isLastQuestion) {
-    // Finish immediately without briefly revealing the answer
-    room.quizEnded = true;
-    room.started = false;
-    room.revealed = false;
-  } else {
-    // Continue to the next question
-    room.currentIndex += 1;
-    room.started = true;
-    room.revealed = false;
-    room.responses = {};
-  }
-
-  cb?.({ ok: true });
-
-  // Send only the final state
-  io.to(room.roomId).emit(
-    'room:update',
-    roomSummary(room)
-  );
-});
-
-  socket.on('player:retake', ({ roomId }, cb) => {
     const room = rooms.get(String(roomId || '').toUpperCase());
-
-    if (!room) {
+    if (!room || room.hostSocketId !== socket.id) {
+      return cb?.({ ok: false });
+    }
+    if (room.quizEnded) {
+      return cb?.({ ok: false });
+    }
+    const q = room.questions[room.currentIndex];
+    if (!q) {
       return cb?.({ ok: false });
     }
 
+    // Save historical answers for this question so players can review them specifically at the end
+    room.historicalResponses.push({
+      questionIndex: room.currentIndex,
+      responses: { ...room.responses }
+    });
+
+    // Calculate scores for the question
+    Object.entries(room.responses).forEach(([playerId, selectedAnswer]) => {
+      if (selectedAnswer === q.answer) {
+        room.scores[playerId] = (room.scores[playerId] || 0) + 1;
+      }
+    });
+
+    const isLastQuestion = room.currentIndex === room.questions.length - 1;
+    if (isLastQuestion) {
+      room.quizEnded = true;
+      room.started = false;
+      room.revealed = false;
+    } else {
+      room.currentIndex += 1;
+      room.started = true;
+      room.revealed = false;
+      room.responses = {};
+    }
+    cb?.({ ok: true });
+    io.to(room.roomId).emit('room:update', roomSummary(room));
+  });
+
+  socket.on('player:retake', ({ roomId }, cb) => {
+    const room = rooms.get(String(roomId || '').toUpperCase());
+    if (!room) {
+      return cb?.({ ok: false });
+    }
     room.currentIndex = 0;
     room.started = true;
     room.quizEnded = false;
     room.revealed = false;
     room.responses = {};
     room.scores = {};
-
+    room.historicalResponses = [];
     cb?.({ ok: true });
     io.to(room.roomId).emit('room:update', roomSummary(room));
   });
@@ -506,13 +499,11 @@ io.on('connection', socket => {
   socket.on('disconnect', () => {
     for (const room of rooms.values()) {
       if (room.participants[socket.id]) {
-       // delete room.participants[socket.id];
+        // Keep players inside participant records for reconnect tolerance, 
+        // only clean temporary active buffers
         delete room.responses[socket.id];
-        //delete room.scores[socket.id];
-
         io.to(room.roomId).emit('room:update', roomSummary(room));
       }
-
       if (room.hostSocketId === socket.id) {
         room.hostSocketId = null;
       }
