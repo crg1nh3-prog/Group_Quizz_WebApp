@@ -54,23 +54,13 @@
         <p class="eyebrow">Start here</p>
         <h2>Run a live quiz from your laptop</h2>
         <p>
-          Create a host room, show the QR code/link, and participants can join from laptops or mobile devices!
+          Create a host room, show the QR code/link, and participants can join instantly from their devices!
         </p>
-        
-        <!-- Host Room Setup -->
+
+        <!-- Host Room Setup Button -->
         <div style="margin-top: 25px;">
           <button id="createRoomBtn" class="btn-primary" style="padding: 12px 28px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; background: #0070f3; color: white; border: none; font-weight: bold;">
             Create Host Room 💻
-          </button>
-        </div>
-        <hr style="border: 0; height: 1px; background: #eee; margin: 30px 0;" />
-        
-        <!-- Manual Laptop Joining form -->
-        <div style="max-width: 320px; margin: 0 auto;">
-          <p class="eyebrow">Or Join as Participant</p>
-          <input type="text" id="manualRoom" placeholder="ENTER 6-LETTER ROOM CODE" style="width: 100%; padding: 12px; font-size: 1.1rem; text-align: center; border: 2px solid #ddd; border-radius: 8px; text-transform: uppercase; margin-bottom: 12px; box-sizing: border-box;" />
-          <button id="joinManual" class="secondary" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer;">
-            Join Room 🚪
           </button>
         </div>
       </div>
@@ -82,19 +72,19 @@
       <div class="lobby-container" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #4CAF50; margin-bottom: 10px;">🎮 Live Quiz Lobby</h1>
         <p style="font-size: 1.1rem; color: #555;">Scan the QR code or click the link below to join the room!</p>
-        
+
         <!-- QR Code Wrapper -->
         <div id="qr-code-wrapper" style="margin: 25px 0;">
           <img id="lobby-qr-img" src="" alt="Lobby QR Code" style="border: 10px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-radius: 8px; max-width: 250px;" />
         </div>
-        
+
         <!-- Clickable Join Link -->
         <div style="margin: 15px 0;">
           <a id="lobby-join-link" class="lobby-link" href="#" target="_blank">Loading link...</a>
         </div>
-        
+
         <h2 style="margin: 20px 0 10px 0;">Room Code: <span id="lobby-room-code" style="color: #007bff; letter-spacing: 2px;">------</span></h2>
-        
+
         <hr style="border: 0; height: 1px; background: #eee; margin: 30px 0;" />
 
         <!-- Connected Players Grid -->
@@ -119,11 +109,11 @@
       <div class="join-container" style="text-align: center; max-width: 400px; margin: 50px auto auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); background: #ffffff;">
         <h2 style="margin-bottom: 10px; color: #333;">Ready to Play? 🏆</h2>
         <p style="color: #666; margin-bottom: 25px;">Enter your name to join the live quiz room.</p>
-        
+
         <div style="margin-bottom: 20px;">
           <input type="text" id="player-name-input" placeholder="Type your nickname..." style="width: 100%; padding: 12px 20px; font-size: 1.1rem; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none;" />
         </div>
-        
+
         <button id="join-lobby-btn" style="width: 100%; background-color: #007bff; color: white; border: none; padding: 12px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; font-weight: bold;">
           Join Lobby 🚪
         </button>
@@ -137,13 +127,13 @@
           <p class="eyebrow">Host Control</p>
           <h2>Quiz Panel</h2>
         </div>
-        
+
         <div class="host-buttons" style="margin-top: 20px;">
           <button id="startQuiz">Start / Restart</button>
           <button id="revealAnswer" class="accent">Show Answer</button>
           <button id="nextQuestion" class="secondary">Next Question</button>
         </div>
-        
+
         <div class="mini-info">
           <div>
             <span>Participants</span>
@@ -170,7 +160,7 @@
           <div id="participants" class="chips"></div>
           <div id="hostExplanation" class="explanation hidden"></div>
         </section>
-        
+
         <!-- Question manager -->
         <section class="card manager-card">
           <div class="manager-header">
@@ -239,7 +229,7 @@
     </section>
   </div>
 
-  <!-- Bypasses proxy folder limits using Socket.io's secure, official CDN server -->
+  <!-- Load Socket.io via secure, official CDN -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="client.js"></script>
 </body>
