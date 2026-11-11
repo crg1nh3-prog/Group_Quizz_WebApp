@@ -5,7 +5,12 @@ const QRCode = require('qrcode');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static('public'));
@@ -66,116 +71,6 @@ const defaultQuestions = [
     ],
     answer: 1,
     explanation: 'Generative AI is useful for creating a first draft of presentation content, including an outline, slide titles, key points, and speaker notes.'
-  },
-  {
-    question: 'Which statement is TRUE?',
-    options: [
-      'AI is always correct',
-      'AI output should be verified by humans',
-      'AI eliminates the need for critical thinking',
-      'AI understands information exactly like humans'
-    ],
-    answer: 1,
-    explanation: 'AI-generated output should be reviewed and verified, especially when it contains important business, technical, legal, financial, or safety-related information.'
-  },
-  {
-    question: 'You need to analyze an Excel file with 50,000 rows and quickly identify trends, outliers, and insights. Which AI tool is most suitable?',
-    options: [
-      'ChatGPT',
-      'Gemini',
-      'Copilot',
-      'Perplexity'
-    ],
-    answer: 2,
-    explanation: 'Copilot is integrated directly into Excel and can analyze data, identify trends, and generate insights within the workbook.'
-  },
-  {
-    question: 'Which use case is MOST suitable for Copilot?',
-    options: [
-      'Finding the latest AI research papers with citations',
-      'Generating code suggestions inside Visual Studio',
-      'Creating a presentation from an existing Word document',
-      'Generating AI images from text prompts'
-    ],
-    answer: 2,
-    explanation: 'Copilot is tightly integrated with Microsoft 365 and can create PowerPoint presentations from Word documents and other Microsoft 365 content.'
-  },
-  {
-    question: 'Which of the following is NOT considered Generative AI content?',
-    options: [
-      'AI-generated image',
-      'AI-generated presentation',
-      'AI-generated code',
-      'Automated sales report dashboard refresh'
-    ],
-    answer: 3,
-    explanation: 'Refreshing a dashboard is primarily an automation or data-processing task. It does not necessarily involve generating new content using Generative AI.'
-  },
-  {
-    question: 'Why do detailed prompts often perform better?',
-    options: [
-      'They reduce ambiguity',
-      'They increase internet speed',
-      'They reduce AI processing power',
-      'They guarantee perfect answers'
-    ],
-    answer: 0,
-    explanation: 'Detailed prompts reduce ambiguity by giving the AI clearer instructions, context, constraints, audience information, and an expected output format.'
-  },
-  {
-    question: 'Which industry is least likely to benefit from AI?',
-    options: [
-      'Manufacturing',
-      'Healthcare',
-      'Finance',
-      'None of the above'
-    ],
-    answer: 3,
-    explanation: 'Manufacturing, healthcare, and finance can all benefit from appropriate AI applications. The value depends on the specific problem, available data, controls, and implementation.'
-  },
-  {
-    question: 'Your manager asks for a 10-slide presentation tomorrow. What should AI help you with first?',
-    options: [
-      'Creating the first draft',
-      'Making final decisions',
-      'Approving the presentation',
-      'Presenting to customers'
-    ],
-    answer: 0,
-    explanation: 'AI can quickly help create the first draft, structure the presentation, suggest slide titles, and generate initial content. A person should review and finalize it.'
-  },
-  {
-    question: 'Which action makes AI output MOST reliable?',
-    options: [
-      'Giving more context and verifying the result',
-      'Using fewer words',
-      'Avoiding questions',
-      'Typing in all capital letters'
-    ],
-    answer: 0,
-    explanation: 'Relevant context helps the AI understand the task. Human verification is still necessary because detailed prompts do not guarantee that every answer will be correct.'
-  },
-  {
-    question: 'Which task is AI LEAST likely to fully replace?',
-    options: [
-      'Preparing monthly management reports',
-      'Analyzing customer feedback trends',
-      'Making high-stakes strategic business decisions',
-      'Creating project status updates'
-    ],
-    answer: 2,
-    explanation: 'Strategic decision-making requires accountability, organizational context, judgment, trade-off analysis, and human responsibility. AI can support the process but should not own the final decision.'
-  },
-  {
-    question: 'Which of the following tasks would have seemed almost impossible for everyday AI tools 10 years ago?',
-    options: [
-      'Generating realistic images from a text description',
-      'Playing chess',
-      'Sorting email inboxes',
-      'Spell checking'
-    ],
-    answer: 0,
-    explanation: 'AI image generation from simple text prompts became practical only in recent years thanks to advances in Generative AI.'
   }
 ];
 
@@ -235,7 +130,7 @@ function newRoom(hostSocketId) {
     participants: {},
     responses: {},
     scores: {},
-    historicalResponses: [] // Records answers per question: [ { questionIndex: 0, responses: { socketId: selectedOption } } ]
+    historicalResponses: []
   });
   return rooms.get(roomId);
 }
@@ -276,7 +171,7 @@ function roomSummary(room) {
     question: q,
     responses: room.responses,
     counts,
-    historicalResponses: room.historicalResponses, // Include participant answer history in the client summary payload
+    historicalResponses: room.historicalResponses,
     participants: Object.values(room.participants)
   };
 }
@@ -305,7 +200,6 @@ app.get('/api/room/:roomId/qr', async (req, res) => {
 });
 
 io.on('connection', socket => {
-  
   socket.on('host:create', async (_, cb) => {
     const room = newRoom(socket.id);
     socket.join(room.roomId);
@@ -343,19 +237,16 @@ io.on('connection', socket => {
     if (!room) {
       return cb?.({
         ok: false,
-        error: 'Quiz room not found. Please check the QR code or room code.'
+        error: 'Quiz room not found.'
       });
     }
     socket.join(room.roomId);
 
-    // Persistent Session Check: If a player with this name already exists in this room,
-    // link this new socket connection to the existing participant data (scores/answers).
     let existingPlayerId = Object.keys(room.participants).find(
       id => room.participants[id].name.toLowerCase() === String(name).toLowerCase()
     );
 
     if (existingPlayerId) {
-      // Re-map scores to this new socket connection
       if (room.scores[existingPlayerId] !== undefined) {
         room.scores[socket.id] = room.scores[existingPlayerId];
         delete room.scores[existingPlayerId];
@@ -364,7 +255,6 @@ io.on('connection', socket => {
         room.responses[socket.id] = room.responses[existingPlayerId];
         delete room.responses[existingPlayerId];
       }
-      // Re-map historical answers
       room.historicalResponses.forEach(step => {
         if (step.responses[existingPlayerId] !== undefined) {
           step.responses[socket.id] = step.responses[existingPlayerId];
@@ -389,24 +279,13 @@ io.on('connection', socket => {
 
   socket.on('player:answer', ({ roomId, optionIndex }, cb) => {
     const room = rooms.get(String(roomId || '').toUpperCase());
-    if (
-      !room ||
-      !room.started ||
-      room.revealed ||
-      room.quizEnded
-    ) {
+    if (!room || !room.started || room.revealed || room.quizEnded) {
       return cb?.({ ok: false });
     }
     const q = room.questions[room.currentIndex];
     const selected = Number(optionIndex);
     if (!q || selected < 0 || selected >= q.options.length) {
       return cb?.({ ok: false });
-    }
-    if (!room.participants[socket.id]) {
-      room.participants[socket.id] = {
-        id: socket.id,
-        name: 'Guest'
-      };
     }
     room.responses[socket.id] = selected;
     cb?.({ ok: true });
@@ -452,13 +331,11 @@ io.on('connection', socket => {
       return cb?.({ ok: false });
     }
 
-    // Save historical answers for this question so players can review them specifically at the end
     room.historicalResponses.push({
       questionIndex: room.currentIndex,
       responses: { ...room.responses }
     });
 
-    // Calculate scores for the question
     Object.entries(room.responses).forEach(([playerId, selectedAnswer]) => {
       if (selectedAnswer === q.answer) {
         room.scores[playerId] = (room.scores[playerId] || 0) + 1;
@@ -499,8 +376,6 @@ io.on('connection', socket => {
   socket.on('disconnect', () => {
     for (const room of rooms.values()) {
       if (room.participants[socket.id]) {
-        // Keep players inside participant records for reconnect tolerance, 
-        // only clean temporary active buffers
         delete room.responses[socket.id];
         io.to(room.roomId).emit('room:update', roomSummary(room));
       }
@@ -512,5 +387,5 @@ io.on('connection', socket => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Quiz app running on port ${PORT}`);
+  console.log('Quiz app running on port ' + PORT);
 });
