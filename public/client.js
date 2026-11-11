@@ -56,7 +56,7 @@ function show(id) {
 }
 
 function esc(s) {
-  return String(s || '').replace(/[&<>"']/g, m => ({
+  return String(s ?? '').replace(/[&<>"']/g, m => ({
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
@@ -146,29 +146,177 @@ function syncQuestionsToServer() {
 
 // ==================== EVENT HANDLERS ====================
 
-// 1. Host Room Setup (Guarded supports BOTH "createRoomBtn" and "createHost" IDs)
-const createBtn = \$('createRoomBtn') || \$('createHost');
-if (createBtn) {
-  createBtn.onclick = () => {
+// ==================== EVENT HANDLERS ====================
+
+// 1. HOST ROOM SETUP
+const createBtn = $('createRoomBtn') || $('createHost');
+
+if (!createBtn) {
+
+  console.error(
+    'Create Host Room button not found. Expected id="createRoomBtn" or id="createHost".'
+  );
+
+} else {
+
+  console.log('Create Host Room button found:', createBtn);
+
+  createBtn.addEventListener('click', async () => {
+
+    console.log('Create Host Room clicked');
+
+    // Check Socket.IO connection
     if (!socket.connected) {
-      alert("🔌 Still connecting to the server. Please wait a moment for Render to spin up your free server!");
+      alert(
+        '🔌 Still connecting to the server. Please wait a moment and try again.'
+      );
       return;
     }
 
+    // Temporarily disable button
+    createBtn.disabled = true;
+    const originalText = createBtn.textContent;
+    createBtn.textContent = 'Creating Room...';
+
     socket.emit('host:create', {}, async res => {
-      if (!res || !res.ok) return;
+
+      console.log('host:create response:', res);
+
+      // Restore button
+      createBtn.disabled = false;
+      createBtn.textContent = originalText;
+
+      if (!res || !res.ok) {
+
+        console.error(
+          'Unable to create host room:',
+          res?.error
+        );
+
+        alert(
+          res?.error || 'Unable to create host room.'
+        );
+
+        return;
+      }
+
+      // ==========================
+      // SAVE HOST SESSION
+      // ==========================
+
       roomId = res.summary.roomId;
       role = 'host';
 
-      // Store details for reload persistence
-      sessionStorage.setItem('quiz_roomId', roomId);
-      sessionStorage.setItem('quiz_role', role);
-      history.replaceState(null, '', `/?room=${roomId}&role=host`);
+      sessionStorage.setItem(
+        'quiz_roomId',
+        roomId
+      );
+
+      sessionStorage.setItem(
+        'quiz_role',
+        'host'
+      );
+
+      history.replaceState(
+        null,
+        '',
+        `/?room=${encodeURIComponent(roomId)}&role=host`
+      );
+
+      // ==========================
+      // SHOW LOBBY
+      // ==========================
 
       show('lobby-screen');
-      if (\$('roomPill')) \$('roomPill').textContent = 'Room ' + roomId;
-      if (\$('lobby-room-code')) \$('lobby-room-code').textContent = roomId;
 
+      if ($('roomPill')) {
+        $('roomPill').textContent =
+          'Room ' + roomId;
+      }
+
+      if ($('lobby-room-code')) {
+        $('lobby-room-code').textContent =
+          roomId;
+      }
+
+      if ($('host-controls')) {
+        $('host-controls').style.display =
+          'block';
+      }
+
+      // ==========================
+      // LOAD QR CODE
+      // ==========================
+
+      try {
+
+        const qrResponse = await fetch(
+          '/api/room/' +
+          encodeURIComponent(roomId) +
+          '/qr'
+        );
+
+        if (!qrResponse.ok) {
+          throw new Error(
+            `QR request failed: ${qrResponse.status}`
+          );
+        }
+
+        const qr = await qrResponse.json();
+
+        console.log(
+          'QR successfully loaded:',
+          qr
+        );
+
+        if ($('lobby-qr-img')) {
+          $('lobby-qr-img').src =
+            qr.dataUrl;
+        }
+
+        if ($('lobby-join-link')) {
+
+          $('lobby-join-link').href =
+            qr.joinUrl;
+
+          $('lobby-join-link').textContent =
+            qr.joinUrl;
+        }
+
+      } catch (error) {
+
+        console.error(
+          'Unable to load QR code:',
+          error
+        );
+
+      }
+
+      // ==========================
+      // LOAD QUESTIONS
+      // ==========================
+
+      if (hostQuestions.length > 0) {
+
+        syncQuestionsToServer();
+
+      } else {
+
+        hostQuestions =
+          res.summary.questions || [];
+
+        saveQuestionsLocally();
+
+        render(res.summary);
+
+        renderQuestionManager();
+      }
+
+    });
+
+  });
+
+}
       // Fetch dynamic QR code
       const qr = await fetch('/api/room/' + roomId + '/qr').then(r => r.json());
       if (\$('lobby-qr-img')) \$('lobby-qr-img').src = qr.dataUrl;
