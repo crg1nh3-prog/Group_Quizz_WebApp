@@ -1,9 +1,13 @@
-const socket = io();
+// Force absolute secure connection to your Render domain
+const socket = io(window.location.origin, {
+  transports: ['websocket', 'polling']
+});
 
 const $ = id => document.getElementById(id);
 
 const qs = new URLSearchParams(location.search);
 
+// Persistent Session Recovery: Check sessionStorage first, then fallback to URL query params
 let roomId = (sessionStorage.getItem('quiz_roomId') || qs.get('room') || '').toUpperCase();
 let role = sessionStorage.getItem('quiz_role') || qs.get('role') || '';
 let savedName = sessionStorage.getItem('quiz_playerName') || '';
@@ -63,6 +67,7 @@ function esc(s) {
   }[m]));
 }
 
+// Convert numbers to options lettering (A, B, C, D)
 function letter(i) {
   return String.fromCharCode(65 + i);
 }
@@ -142,36 +147,31 @@ function syncQuestionsToServer() {
   );
 }
 
-// Host button click
+// Host button click (Supports BOTH "createRoomBtn" and "createHost" HTML IDs safely)
 const hostBtn = $('createRoomBtn') || $('createHost');
 if (hostBtn) {
   hostBtn.onclick = () => {
     if (!socket.connected) {
-      alert("🔌 Server is sleeping or still building. Please wait up to 45 seconds for Render to load!");
+      alert("🔌 Connecting to server... (Render spins down free services after inactivity - this takes ~45 seconds on the first load. Please wait!)");
       return;
     }
     socket.emit('host:create', {}, async res => {
       if (!res || !res.ok) return;
       roomId = res.summary.roomId;
       role = 'host';
-
       sessionStorage.setItem('quiz_roomId', roomId);
       sessionStorage.setItem('quiz_role', role);
       history.replaceState(null, '', '/?room=' + roomId + '&role=host');
-
       show('lobby-screen');
       if ($('roomPill')) $('roomPill').textContent = 'Room ' + roomId;
       if ($('lobby-room-code')) $('lobby-room-code').textContent = roomId;
-
       const qr = await fetch('/api/room/' + roomId + '/qr').then(r => r.json());
       if ($('lobby-qr-img')) $('lobby-qr-img').src = qr.dataUrl;
       if ($('lobby-join-link')) {
         $('lobby-join-link').href = qr.joinUrl;
         $('lobby-join-link').textContent = qr.joinUrl;
       }
-
       if ($('host-controls')) $('host-controls').style.display = 'block';
-
       if (hostQuestions.length > 0) {
         syncQuestionsToServer();
       } else {
@@ -184,6 +184,7 @@ if (hostBtn) {
   };
 }
 
+// Player manual join button (Laptops)
 const joinManualBtn = $('joinManual');
 if (joinManualBtn) {
   joinManualBtn.onclick = () => {
@@ -201,6 +202,7 @@ if (joinManualBtn) {
   };
 }
 
+// Player username submission
 const joinLobbyBtn = $('join-lobby-btn') || $('confirmJoin');
 if (joinLobbyBtn) {
   joinLobbyBtn.onclick = () => {
@@ -216,12 +218,10 @@ if (joinLobbyBtn) {
 
 function joinPlayer(nameToRegister) {
   const name = nameToRegister || 'Guest';
-
   if (!socket.connected) {
     alert("🔌 Connecting to server... Please wait.");
     return;
   }
-
   socket.emit(
     'player:join',
     {
@@ -237,7 +237,6 @@ function joinPlayer(nameToRegister) {
       sessionStorage.setItem('quiz_roomId', roomId);
       sessionStorage.setItem('quiz_role', 'player');
       sessionStorage.setItem('quiz_playerName', name);
-
       show('playerPanel');
       if ($('roomPill')) $('roomPill').textContent = 'Room ' + roomId;
       render(res.summary);
@@ -245,6 +244,7 @@ function joinPlayer(nameToRegister) {
   );
 }
 
+// Reconnect status restoration on reloads
 if (roomId && role === 'player') {
   if (savedName) {
     joinPlayer(savedName);
@@ -292,7 +292,6 @@ if (revealAnswerBtn) {
 
 function showAllCorrectAnswers() {
   const questions = latest?.questions?.length > 0 ? latest.questions : hostQuestions;
-
   if (!questions || questions.length === 0) {
     if ($('hostOptions')) {
       $('hostOptions').innerHTML = '<div class="explanation">No questions available.</div>';
@@ -364,7 +363,6 @@ function render(summary) {
   if (!summary) return;
   const q = summary.question;
   selected = summary.responses?.[socket.id] !== undefined ? summary.responses[socket.id] : null;
-
   if (role === 'host') {
     if (summary.started && !summary.quizEnded) {
       show('hostPanel');
@@ -382,7 +380,6 @@ function renderHost(summary, q) {
   if (!summary.started) {
     const lobbyPlayerCount = $('lobby-player-count');
     if (lobbyPlayerCount) lobbyPlayerCount.textContent = summary.participants.length;
-
     const lobbyPlayersList = $('lobby-players-list');
     if (lobbyPlayersList) {
       lobbyPlayersList.innerHTML = summary.participants
@@ -395,23 +392,19 @@ function renderHost(summary, q) {
   if (summary.quizEnded) {
     const progress = $('progress');
     if (progress) progress.textContent = summary.totalQuestions + '/' + summary.totalQuestions;
-
     const hostQuestion = $('hostQuestion');
     if (hostQuestion) hostQuestion.textContent = '🎉 Quiz Completed!';
-
     const hostOptions = $('hostOptions');
     if (hostOptions) {
       hostOptions.innerHTML = '<div class="explanation"><b>The quiz is completed.</b><br><br>Scores are shown below. Click Show Answer to display correct answers.</div>';
     }
     const bars = $('bars');
     if (bars) bars.innerHTML = '';
-
     const hostExplanation = $('hostExplanation');
     if (hostExplanation) {
       hostExplanation.classList.add('hidden');
       hostExplanation.innerHTML = '';
     }
-
     const leaderboard = summary.leaderboard || [];
     const participants = $('participants');
     if (participants) {
@@ -434,13 +427,10 @@ function renderHost(summary, q) {
 
   const progress = $('progress');
   if (progress) progress.textContent = (summary.currentIndex + 1) + '/' + summary.totalQuestions;
-
   const hostQuestion = $('hostQuestion');
   if (hostQuestion) hostQuestion.textContent = q.question;
-
   const participantCount = $('participantCount');
   if (participantCount) participantCount.textContent = '(' + summary.participants.length + ')';
-
   const hostOptions = $('hostOptions');
   if (hostOptions) {
     hostOptions.innerHTML = q.options
@@ -453,7 +443,6 @@ function renderHost(summary, q) {
       })
       .join('');
   }
-
   const total = Math.max(1, Object.keys(summary.responses).length);
   const bars = $('bars');
   if (bars) {
@@ -473,7 +462,6 @@ function renderHost(summary, q) {
       })
       .join('');
   }
-
   const participants = $('participants');
   if (participants) {
     participants.innerHTML = summary.participants
@@ -483,7 +471,6 @@ function renderHost(summary, q) {
       })
       .join('') || '<p class="muted">No participants yet.</p>';
   }
-
   const hostExplanation = $('hostExplanation');
   if (hostExplanation) {
     hostExplanation.classList.toggle('hidden', !summary.revealed);
@@ -509,17 +496,14 @@ function renderPlayer(summary, q) {
 
     const questions = summary.questions || [];
     const history = summary.historicalResponses || [];
-
     const detailedReviewCardsHtml = questions
       .map((questionObj, index) => {
         const questionHistory = history.find(item => item.questionIndex === index);
         const playerResponseIndex = questionHistory ? questionHistory.responses[socket.id] : undefined;
         const isCorrect = playerResponseIndex === questionObj.answer;
-
         let playerFeedbackHtml = "";
         let cardBackground = "#f8fff8";
         let cardBorder = "2px solid #34a853";
-
         if (playerResponseIndex === undefined) {
           playerFeedbackHtml = '<p style="color: #7f8c8d; font-weight: bold; margin: 8px 0 0 0;">⚠️ You didn\'t submit an answer.</p>';
           cardBackground = "#fdfefe";
@@ -531,11 +515,9 @@ function renderPlayer(summary, q) {
           cardBackground = "#fffbfb";
           cardBorder = "2px solid #ea4335";
         }
-
         const optionsBreakdown = questionObj.options.map((opt, optIndex) => {
           const isThisOptionCorrect = optIndex === questionObj.answer;
           const isThisOptionSelected = optIndex === playerResponseIndex;
-
           let optStyle = "padding: 8px 12px; margin: 6px 0; border-radius: 6px; border: 1px solid #eee; text-align: left;";
           if (isThisOptionCorrect) {
             optStyle += " background-color: #e6f4ea; border-color: #34a853; font-weight: bold; color: #137333;";
@@ -558,10 +540,8 @@ function renderPlayer(summary, q) {
 
     const playerRoom = $('playerRoom');
     if (playerRoom) playerRoom.textContent = 'Room ' + summary.roomId;
-
     const playerQuestion = $('playerQuestion');
     if (playerQuestion) playerQuestion.innerHTML = '🎉 Quiz Completed!';
-
     const playerOptions = $('playerOptions');
     if (playerOptions) {
       playerOptions.innerHTML = '<div style="text-align:center; padding:20px;">' +
@@ -589,7 +569,6 @@ function renderPlayer(summary, q) {
       playerExplanation.classList.add('hidden');
       playerExplanation.innerHTML = '';
     }
-
     const retakeBtn = document.getElementById('retakeQuizBtn');
     if (retakeBtn) {
       retakeBtn.addEventListener('click', () => {
@@ -597,7 +576,6 @@ function renderPlayer(summary, q) {
         socket.emit('player:retake', { roomId: roomId });
       });
     }
-
     const showAnsBtn = document.getElementById('showAnswersBtn');
     if (showAnsBtn) {
       showAnsBtn.addEventListener('click', () => {
@@ -617,7 +595,6 @@ function renderPlayer(summary, q) {
 
   const playerRoom = $('playerRoom');
   if (playerRoom) playerRoom.textContent = 'Room ' + summary.roomId + ' • Question ' + (summary.currentIndex + 1) + '/' + summary.totalQuestions;
-
   const playerQuestion = $('playerQuestion');
   if (playerQuestion) playerQuestion.textContent = summary.started ? q.question : 'Waiting for host to start...';
 
@@ -641,7 +618,6 @@ function renderPlayer(summary, q) {
         const isSelected = selected === i;
         const isCorrectOption = i === q.answer;
         let optionStateClass = "";
-
         if (isSelected) {
           optionStateClass = "selected";
         }
@@ -652,7 +628,6 @@ function renderPlayer(summary, q) {
             optionStateClass = "incorrect";
           }
         }
-
         return '<button class="playerOption ' + optionStateClass + '" data-i="' + i + '" ' + (summary.revealed ? 'disabled' : '') + '>' +
           '<span class="option-letter">' + letter(i) + '</span>' +
           '<span>' + esc(o) + '</span>' +
