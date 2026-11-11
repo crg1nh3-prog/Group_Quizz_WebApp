@@ -71,6 +71,116 @@ const defaultQuestions = [
     ],
     answer: 1,
     explanation: 'Generative AI is useful for creating a first draft of presentation content, including an outline, slide titles, key points, and speaker notes.'
+  },
+  {
+    question: 'Which statement is TRUE?',
+    options: [
+      'AI is always correct',
+      'AI output should be verified by humans',
+      'AI eliminates the need for critical thinking',
+      'AI understands information exactly like humans'
+    ],
+    answer: 1,
+    explanation: 'AI-generated output should be reviewed and verified, especially when it contains important business, technical, legal, financial, or safety-related information.'
+  },
+  {
+    question: 'You need to analyze an Excel file with 50,000 rows and quickly identify trends, outliers, and insights. Which AI tool is most suitable?',
+    options: [
+      'ChatGPT',
+      'Gemini',
+      'Copilot',
+      'Perplexity'
+    ],
+    answer: 2,
+    explanation: 'Copilot is integrated directly into Excel and can analyze data, identify trends, and generate insights within the workbook.'
+  },
+  {
+    question: 'Which use case is MOST suitable for Copilot?',
+    options: [
+      'Finding the latest AI research papers with citations',
+      'Generating code suggestions inside Visual Studio',
+      'Creating a presentation from an existing Word document',
+      'Generating AI images from text prompts'
+    ],
+    answer: 2,
+    explanation: 'Copilot is tightly integrated with Microsoft 365 and can create PowerPoint presentations from Word documents and other Microsoft 365 content.'
+  },
+  {
+    question: 'Which of the following is NOT considered Generative AI content?',
+    options: [
+      'AI-generated image',
+      'AI-generated presentation',
+      'AI-generated code',
+      'Automated sales report dashboard refresh'
+    ],
+    answer: 3,
+    explanation: 'Refreshing a dashboard is primarily an automation or data-processing task. It does not necessarily involve generating new content using Generative AI.'
+  },
+  {
+    question: 'Why do detailed prompts often perform better?',
+    options: [
+      'They reduce ambiguity',
+      'They increase internet speed',
+      'They reduce AI processing power',
+      'They guarantee perfect answers'
+    ],
+    answer: 0,
+    explanation: 'Detailed prompts reduce ambiguity by giving the AI clearer instructions, context, constraints, audience information, and an expected output format.'
+  },
+  {
+    question: 'Which industry is least likely to benefit from AI?',
+    options: [
+      'Manufacturing',
+      'Healthcare',
+      'Finance',
+      'None of the above'
+    ],
+    answer: 3,
+    explanation: 'Manufacturing, healthcare, and finance can all benefit from appropriate AI applications. The value depends on the specific problem, available data, controls, and implementation.'
+  },
+  {
+    question: 'Your manager asks for a 10-slide presentation tomorrow. What should AI help you with first?',
+    options: [
+      'Creating the first draft',
+      'Making final decisions',
+      'Approving the presentation',
+      'Presenting to customers'
+    ],
+    answer: 0,
+    explanation: 'AI can quickly help create the first draft, structure the presentation, suggest slide titles, and generate initial content. A person should review and finalize it.'
+  },
+  {
+    question: 'Which action makes AI output MOST reliable?',
+    options: [
+      'Giving more context and verifying the result',
+      'Using fewer words',
+      'Avoiding questions',
+      'Typing in all capital letters'
+    ],
+    answer: 0,
+    explanation: 'Relevant context helps the AI understand the task. Human verification is still necessary because detailed prompts do not guarantee that every answer will be correct.'
+  },
+  {
+    question: 'Which task is AI LEAST likely to fully replace?',
+    options: [
+      'Preparing monthly management reports',
+      'Analyzing customer feedback trends',
+      'Making high-stakes strategic business decisions',
+      'Creating project status updates'
+    ],
+    answer: 2,
+    explanation: 'Strategic decision-making requires accountability, organizational context, judgment, trade-off analysis, and human responsibility. AI can support the process but should not own the final decision.'
+  },
+  {
+    question: 'Which of the following tasks would have seemed almost impossible for everyday AI tools 10 years ago?',
+    options: [
+      'Generating realistic images from a text description',
+      'Playing chess',
+      'Sorting email inboxes',
+      'Spell checking'
+    ],
+    answer: 0,
+    explanation: 'AI image generation from simple text prompts became practical only in recent years thanks to advances in Generative AI.'
   }
 ];
 
