@@ -24,7 +24,7 @@ function saveQuestionsLocally() {
   );
 }
 
-// Clean Screen Visibility Manager (Updated to handle new Lobby and Player Join UI)
+// Clean Screen Visibility Manager
 function show(id) {
   ['home', 'lobby-screen', 'player-join-screen', 'hostPanel', 'playerPanel'].forEach(x => {
     const el = $(x);
@@ -126,20 +126,23 @@ function syncQuestionsToServer() {
   );
 }
 
-// Host Creation Setup (Stays in the Lobby Screen instead of jumping straight to panels)
+// Host Room Setup
 $('createRoomBtn').onclick = () => {
   socket.emit('host:create', {}, async res => {
     if (!res || !res.ok) return;
     roomId = res.summary.roomId;
     role = 'host';
-    // Set persistence details
+
+    // Store details for browser reload recovery
     sessionStorage.setItem('quiz_roomId', roomId);
     sessionStorage.setItem('quiz_role', role);
     history.replaceState(null, '', `/?room=${roomId}&role=host`);
+
     show('lobby-screen');
     $('roomPill').textContent = `Room ${roomId}`;
     $('lobby-room-code').textContent = roomId;
-    // Fetch dynamic room joining QR from your server API
+
+    // Fetch dynamic QR & Join URL
     const qr = await fetch(`/api/room/${roomId}/qr`).then(r => r.json());
     $('lobby-qr-img').src = qr.dataUrl;
     
@@ -147,7 +150,6 @@ $('createRoomBtn').onclick = () => {
     $('lobby-join-link').href = qr.joinUrl;
     $('lobby-join-link').textContent = qr.joinUrl;
 
-    // Show starting elements for the host
     $('host-controls').style.display = 'block';
 
     if (hostQuestions.length > 0) {
@@ -173,7 +175,7 @@ $('joinManual').onclick = () => {
   }
 };
 
-// Player Click to Join
+// Player Click to Sign In
 $('join-lobby-btn').onclick = () => {
   const nameInput = $('player-name-input').value.trim();
   if (nameInput) {
@@ -181,7 +183,6 @@ $('join-lobby-btn').onclick = () => {
   }
 };
 
-// Join Handler incorporating persistent Session Memory
 function joinPlayer(nameToRegister) {
   const name = nameToRegister || 'Guest';
   
@@ -196,11 +197,10 @@ function joinPlayer(nameToRegister) {
         $('joinError').textContent = res?.error || 'Unable to join quiz.';
         return;
       }
-      // Save user credentials on successful sign-in
       sessionStorage.setItem('quiz_roomId', roomId);
       sessionStorage.setItem('quiz_role', 'player');
       sessionStorage.setItem('quiz_playerName', name);
-      // Keep them in wait panel until Host starts
+
       show('playerPanel');
       $('roomPill').textContent = `Room ${roomId}`;
       render(res.summary);
@@ -208,16 +208,14 @@ function joinPlayer(nameToRegister) {
   );
 }
 
-// Auto-Reconnection Lifecycle for Page Refreshes
+// Reconnection Lifecycle on Refresh
 if (roomId && role === 'player') {
   if (savedName) {
-    // Attempt silently joining back
     joinPlayer(savedName);
   } else {
     show('player-join-screen');
   }
 } else if (roomId && role === 'host') {
-  // Restore Host Lobby State
   show('lobby-screen');
   $('roomPill').textContent = `Room ${roomId}`;
   $('lobby-room-code').textContent = roomId;
@@ -294,30 +292,4 @@ function showAllCorrectAnswers() {
   `;
   $('bars').innerHTML = '';
   $('hostExplanation').classList.add('hidden');
-  $('hostExplanation').innerHTML = '';
-}
-
-$('nextQuestion').onclick = () => {
-  socket.emit('host:next', { roomId });
-};
-
-$('clearForm').onclick = cleanForm;
-
-$('saveQuestion').onclick = () => {
-  const q = getFormQuestion();
-  if (!q) return;
-  if (editingIndex === null) {
-    hostQuestions.push(q);
-  } else {
-    hostQuestions[editingIndex] = q;
-  }
-  saveQuestionsLocally();
-  cleanForm();
-  syncQuestionsToServer();
-};
-
-socket.on('room:update', summary => {
-  latest = summary;
-  if (role === 'host') {
-    hostQuestions = summary.questions || hostQuestions;
-    saveQuestionsLocally()
+  $('hostExplanation').innerHTML
