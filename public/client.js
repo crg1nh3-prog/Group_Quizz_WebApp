@@ -3,11 +3,15 @@ const socket = io(window.location.origin, {
   transports: ['websocket', 'polling']
 });
 
-const $ = id => document.getElementById(id);
+const \$ = id => document.getElementById(id);
 
 const qs = new URLSearchParams(location.search);
 
-// Persistent Session Recovery: Check sessionStorage first, then fallback to URL query params
+// Clean cache reset: If landing directly on the homepage, completely flush older stale sessions
+if (!qs.has('room')) {
+  sessionStorage.clear();
+}
+
 let roomId = (sessionStorage.getItem('quiz_roomId') || qs.get('room') || '').toUpperCase();
 let role = sessionStorage.getItem('quiz_role') || qs.get('role') || '';
 let savedName = sessionStorage.getItem('quiz_playerName') || '';
@@ -67,7 +71,6 @@ function esc(s) {
   }[m]));
 }
 
-// Convert numbers to options lettering (A, B, C, D)
 function letter(i) {
   return String.fromCharCode(65 + i);
 }
@@ -88,20 +91,20 @@ function cleanForm() {
   if ($('qmAnswer')) $('qmAnswer').value = '0';
   if ($('qmExplanation')) $('qmExplanation').value = '';
   editingIndex = null;
-  if ($('saveQuestion')) $('saveQuestion').textContent = 'Add Question';
+  if (\$('saveQuestion')) \$('saveQuestion').textContent = 'Add Question';
   setStatus('');
 }
 
 function getFormQuestion() {
-  const question = $('qmQuestion') ? $('qmQuestion').value.trim() : '';
+  const question = \$('qmQuestion') ? \$('qmQuestion').value.trim() : '';
   const options = [
-    $('qmOption0') ? $('qmOption0').value.trim() : '',
-    $('qmOption1') ? $('qmOption1').value.trim() : '',
-    $('qmOption2') ? $('qmOption2').value.trim() : '',
-    $('qmOption3') ? $('qmOption3').value.trim() : ''
+    \$('qmOption0') ? \$('qmOption0').value.trim() : '',
+    \$('qmOption1') ? \$('qmOption1').value.trim() : '',
+    \$('qmOption2') ? \$('qmOption2').value.trim() : '',
+    \$('qmOption3') ? \$('qmOption3').value.trim() : ''
   ].filter(Boolean);
-  const answer = $('qmAnswer') ? Number($('qmAnswer').value) : 0;
-  const explanation = $('qmExplanation') ? $('qmExplanation').value.trim() : '';
+  const answer = \$('qmAnswer') ? Number(\$('qmAnswer').value) : 0;
+  const explanation = \$('qmExplanation') ? \$('qmExplanation').value.trim() : '';
 
   if (!question) {
     setStatus('Please enter a question.', 'error-text');
@@ -147,12 +150,12 @@ function syncQuestionsToServer() {
   );
 }
 
-// Host button click (Supports BOTH "createRoomBtn" and "createHost" HTML IDs safely)
-const hostBtn = $('createRoomBtn') || $('createHost');
+// Host button click
+const hostBtn = \$('createRoomBtn') || \$('createHost');
 if (hostBtn) {
   hostBtn.onclick = () => {
     if (!socket.connected) {
-      alert("🔌 Connecting to server... (Render spins down free services after inactivity - this takes ~45 seconds on the first load. Please wait!)");
+      alert("🔌 Server is sleeping or still building. Please wait up to 45 seconds for Render to load!");
       return;
     }
     socket.emit('host:create', {}, async res => {
@@ -163,15 +166,15 @@ if (hostBtn) {
       sessionStorage.setItem('quiz_role', role);
       history.replaceState(null, '', '/?room=' + roomId + '&role=host');
       show('lobby-screen');
-      if ($('roomPill')) $('roomPill').textContent = 'Room ' + roomId;
-      if ($('lobby-room-code')) $('lobby-room-code').textContent = roomId;
+      if (\$('roomPill')) \$('roomPill').textContent = 'Room ' + roomId;
+      if (\$('lobby-room-code')) \$('lobby-room-code').textContent = roomId;
       const qr = await fetch('/api/room/' + roomId + '/qr').then(r => r.json());
-      if ($('lobby-qr-img')) $('lobby-qr-img').src = qr.dataUrl;
+      if (\$('lobby-qr-img')) \$('lobby-qr-img').src = qr.dataUrl;
       if ($('lobby-join-link')) {
         $('lobby-join-link').href = qr.joinUrl;
         $('lobby-join-link').textContent = qr.joinUrl;
       }
-      if ($('host-controls')) $('host-controls').style.display = 'block';
+      if (\$('host-controls')) \$('host-controls').style.display = 'block';
       if (hostQuestions.length > 0) {
         syncQuestionsToServer();
       } else {
@@ -184,7 +187,6 @@ if (hostBtn) {
   };
 }
 
-// Player manual join button (Laptops)
 const joinManualBtn = $('joinManual');
 if (joinManualBtn) {
   joinManualBtn.onclick = () => {
@@ -202,11 +204,10 @@ if (joinManualBtn) {
   };
 }
 
-// Player username submission
-const joinLobbyBtn = $('join-lobby-btn') || $('confirmJoin');
+const joinLobbyBtn = \$('join-lobby-btn') || \$('confirmJoin');
 if (joinLobbyBtn) {
   joinLobbyBtn.onclick = () => {
-    const nameInput = $('player-name-input') || $('playerName');
+    const nameInput = \$('player-name-input') || \$('playerName');
     if (nameInput) {
       const nameVal = nameInput.value.trim();
       if (nameVal) {
@@ -238,13 +239,12 @@ function joinPlayer(nameToRegister) {
       sessionStorage.setItem('quiz_role', 'player');
       sessionStorage.setItem('quiz_playerName', name);
       show('playerPanel');
-      if ($('roomPill')) $('roomPill').textContent = 'Room ' + roomId;
+      if (\$('roomPill')) \$('roomPill').textContent = 'Room ' + roomId;
       render(res.summary);
     }
   );
 }
 
-// Reconnect status restoration on reloads
 if (roomId && role === 'player') {
   if (savedName) {
     joinPlayer(savedName);
@@ -253,11 +253,11 @@ if (roomId && role === 'player') {
   }
 } else if (roomId && role === 'host') {
   show('lobby-screen');
-  if ($('roomPill')) $('roomPill').textContent = 'Room ' + roomId;
-  if ($('lobby-room-code')) $('lobby-room-code').textContent = roomId;
-  if ($('host-controls')) $('host-controls').style.display = 'block';
+  if (\$('roomPill')) \$('roomPill').textContent = 'Room ' + roomId;
+  if (\$('lobby-room-code')) \$('lobby-room-code').textContent = roomId;
+  if (\$('host-controls')) \$('host-controls').style.display = 'block';
   fetch('/api/room/' + roomId + '/qr').then(r => r.json()).then(qr => {
-    if ($('lobby-qr-img')) $('lobby-qr-img').src = qr.dataUrl;
+    if (\$('lobby-qr-img')) \$('lobby-qr-img').src = qr.dataUrl;
     if ($('lobby-join-link')) {
       $('lobby-join-link').href = qr.joinUrl;
       $('lobby-join-link').textContent = qr.joinUrl;
@@ -265,7 +265,7 @@ if (roomId && role === 'player') {
   });
 }
 
-const startGameBtn = $('start-game-btn') || $('startQuiz');
+const startGameBtn = \$('start-game-btn') || \$('startQuiz');
 if (startGameBtn) {
   startGameBtn.onclick = () => {
     socket.emit('host:start', { roomId: roomId });
@@ -298,7 +298,6 @@ function showAllCorrectAnswers() {
     }
     return;
   }
-
   const allAnswersHtml = questions
     .map((question, index) => {
       const answerIndex = Number(question.answer);
@@ -309,12 +308,11 @@ function showAllCorrectAnswers() {
         '</div>';
     })
     .join('');
-
-  if ($('hostQuestion')) $('hostQuestion').textContent = '✅ Complete Answer Key';
+  if (\$('hostQuestion')) \$('hostQuestion').textContent = '✅ Complete Answer Key';
   if ($('hostOptions')) {
     $('hostOptions').innerHTML = '<div><h3>All Correct Answers</h3>' + allAnswersHtml + '</div>';
   }
-  if ($('bars')) $('bars').innerHTML = '';
+  if (\$('bars')) \$('bars').innerHTML = '';
   if ($('hostExplanation')) {
     $('hostExplanation').classList.add('hidden');
     $('hostExplanation').innerHTML = '';
@@ -429,8 +427,18 @@ function renderHost(summary, q) {
   if (progress) progress.textContent = (summary.currentIndex + 1) + '/' + summary.totalQuestions;
   const hostQuestion = $('hostQuestion');
   if (hostQuestion) hostQuestion.textContent = q.question;
+
   const participantCount = $('participantCount');
   if (participantCount) participantCount.textContent = '(' + summary.participants.length + ')';
+
+  // Real-time Sidebar names display
+  const sidebarParticipantsList = $('sidebar-participants-list');
+  if (sidebarParticipantsList) {
+    sidebarParticipantsList.innerHTML = summary.participants
+      .map(p => '<span class="sidebar-name">' + esc(p.name) + '</span>')
+      .join('') || '<p class="muted" style="font-size:12px;">No one joined yet</p>';
+  }
+
   const hostOptions = $('hostOptions');
   if (hostOptions) {
     hostOptions.innerHTML = q.options
@@ -493,7 +501,6 @@ function renderPlayer(summary, q) {
           '</div>';
       })
       .join('');
-
     const questions = summary.questions || [];
     const history = summary.historicalResponses || [];
     const detailedReviewCardsHtml = questions
@@ -526,7 +533,6 @@ function renderPlayer(summary, q) {
           }
           return '<div style="' + optStyle + '">' + letter(optIndex) + '. ' + esc(opt) + '</div>';
         }).join('');
-
         return '<div style="border: ' + cardBorder + '; padding: 16px; margin-bottom: 16px; border-radius: 12px; background: ' + cardBackground + '; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">' +
           '<h4 style="margin: 0 0 10px 0; color: #333; text-align: left;"><b>Q' + (index + 1) + ':</b> ' + esc(questionObj.question) + '</h4>' +
           '<div style="margin-bottom: 12px;">' + optionsBreakdown + '</div>' +
@@ -537,7 +543,6 @@ function renderPlayer(summary, q) {
           '</div>';
       })
       .join('');
-
     const playerRoom = $('playerRoom');
     if (playerRoom) playerRoom.textContent = 'Room ' + summary.roomId;
     const playerQuestion = $('playerQuestion');
@@ -592,12 +597,10 @@ function renderPlayer(summary, q) {
     }
     return;
   }
-
   const playerRoom = $('playerRoom');
   if (playerRoom) playerRoom.textContent = 'Room ' + summary.roomId + ' • Question ' + (summary.currentIndex + 1) + '/' + summary.totalQuestions;
   const playerQuestion = $('playerQuestion');
   if (playerQuestion) playerQuestion.textContent = summary.started ? q.question : 'Waiting for host to start...';
-
   if (!summary.started) {
     const playerOptions = $('playerOptions');
     if (playerOptions) {
@@ -610,7 +613,6 @@ function renderPlayer(summary, q) {
     if (playerExplanation) playerExplanation.classList.add('hidden');
     return;
   }
-
   const playerOptions = $('playerOptions');
   if (playerOptions) {
     playerOptions.innerHTML = q.options
@@ -635,7 +637,6 @@ function renderPlayer(summary, q) {
       })
       .join('');
   }
-
   document.querySelectorAll('.playerOption').forEach(btn => {
     btn.onclick = () => {
       selected = Number(btn.dataset.i);
@@ -643,7 +644,6 @@ function renderPlayer(summary, q) {
       renderPlayer(latest, q);
     };
   });
-
   const playerExplanation = $('playerExplanation');
   if (playerExplanation) {
     playerExplanation.classList.toggle('hidden', !summary.revealed);
@@ -695,7 +695,7 @@ window.editQuestion = function (index) {
   if ($('qmAnswer')) $('qmAnswer').value = String(q.answer);
   if ($('qmExplanation')) $('qmExplanation').value = q.explanation || '';
   editingIndex = index;
-  if ($('saveQuestion')) $('saveQuestion').textContent = 'Update Question';
+  if (\$('saveQuestion')) \$('saveQuestion').textContent = 'Update Question';
   setStatus('Editing question ' + (index + 1), 'success-text');
   const card = document.querySelector('.manager-card');
   if (card) {
