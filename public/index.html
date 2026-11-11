@@ -6,7 +6,7 @@
   <title>Group Quiz Live</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
-    /* Custom styling helper for player badges and review cards */
+    /* Styling helper for dynamic elements */
     .player-badge {
       background-color: #e9ecef;
       color: #495057;
@@ -24,10 +24,11 @@
     }
     .lobby-link {
       display: inline-block;
-      margin-top: 10px;
+      margin-top: 15px;
       color: #0070f3;
       text-decoration: none;
       font-weight: bold;
+      font-size: 1.1rem;
       word-break: break-all;
     }
     .lobby-link:hover {
@@ -47,198 +48,25 @@
       <div class="pill" id="roomPill">No room</div>
     </header>
 
-    <!-- ==================== HOME SCREEN ==================== -->
+    <!-- ==================== WELCOME HOME SCREEN ==================== -->
     <main id="home" class="hero-card">
-      <div class="hero-content">
+      <div class="hero-content" style="text-align: center;">
         <p class="eyebrow">Start here</p>
         <h2>Run a live quiz from your laptop</h2>
         <p>
-          Create a host room, show the QR code, and participants can join from their laptop or mobile browser.
+          Create a host room, show the QR code/link, and participants can join from laptops or mobile devices!
         </p>
         
-        <!-- Host Room Option -->
+        <!-- Host Room Setup -->
         <div style="margin-top: 25px;">
-          <button id="createRoomBtn" class="btn-primary" style="padding: 12px 24px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; background: #0070f3; color: white; border: none; font-weight: bold;">
+          <button id="createRoomBtn" class="btn-primary" style="padding: 12px 28px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; background: #0070f3; color: white; border: none; font-weight: bold;">
             Create Host Room 💻
           </button>
         </div>
 
         <hr style="border: 0; height: 1px; background: #eee; margin: 30px 0;" />
 
-        <!-- Manual Player Join Option (For Laptop Users) -->
+        <!-- Manual Laptop Joining form -->
         <div style="max-width: 320px; margin: 0 auto;">
-          <p class="eyebrow">Or Join as Player</p>
-          <input type="text" id="manualRoom" placeholder="ENTER 6-LETTER ROOM CODE" style="width: 100%; padding: 10px; font-size: 1.1rem; text-align: center; border: 2px solid #ddd; border-radius: 8px; text-transform: uppercase; margin-bottom: 12px;" />
-          <button id="joinManual" class="secondary" style="width: 100%; padding: 10px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer;">
-            Join Room 🚪
-          </button>
-        </div>
-      </div>
-      <p id="joinError" class="error"></p>
-    </main>
-
-    <!-- ==================== LOBBY SCREEN (For Host) ==================== -->
-    <section id="lobby-screen" class="hero-card" style="display: none;">
-      <div class="lobby-container" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #4CAF50; margin-bottom: 10px;">🎮 Live Quiz Lobby</h1>
-        <p style="font-size: 1.1rem; color: #555;">Scan the QR code or click the link below to join!</p>
-        
-        <!-- QR Code Wrapper -->
-        <div id="qr-code-wrapper" style="margin: 25px 0;">
-          <img id="lobby-qr-img" src="" alt="Lobby QR Code" style="border: 10px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-radius: 8px; max-width: 250px;" />
-        </div>
-        
-        <!-- Clickable Copyable Link -->
-        <a id="lobby-join-link" class="lobby-link" href="#" target="_blank">Loading link...</a>
-        
-        <h2 style="margin: 20px 0 10px 0;">Room Code: <span id="lobby-room-code" style="color: #007bff; letter-spacing: 2px;">------</span></h2>
-        
-        <hr style="border: 0; height: 1px; background: #eee; margin: 30px 0;" />
-
-        <!-- Connected Players -->
-        <div class="players-box">
-          <h3>Joined Players (<span id="lobby-player-count">0</span>)</h3>
-          <div id="lobby-players-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px; min-height: 50px;">
-            <!-- Player name badges load dynamically -->
-          </div>
-        </div>
-
-        <!-- Host Start Game Controls -->
-        <div id="host-controls" style="margin-top: 30px; display: none;">
-          <button id="start-game-btn" style="background-color: #28a745; color: white; border: none; padding: 15px 40px; font-size: 1.2rem; border-radius: 30px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            Start Game 🚀
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== PLAYER SIGN-IN SCREEN ==================== -->
-    <section id="player-join-screen" class="hero-card" style="display: none;">
-      <div class="join-container" style="text-align: center; max-width: 400px; margin: 50px auto auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); background: #ffffff;">
-        <h2 style="margin-bottom: 10px; color: #333;">Ready to Play? 🏆</h2>
-        <p style="color: #666; margin-bottom: 25px;">Enter your name to join the live quiz room.</p>
-        
-        <div style="margin-bottom: 20px;">
-          <input type="text" id="player-name-input" placeholder="Type your nickname..." style="width: 100%; padding: 12px 20px; font-size: 1.1rem; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none;" />
-        </div>
-        
-        <button id="join-lobby-btn" style="width: 100%; background-color: #007bff; color: white; border: none; padding: 12px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; font-weight: bold;">
-          Join Lobby 🚪
-        </button>
-      </div>
-    </section>
-
-    <!-- ==================== HOST CONFIG/PANEL SECTION ==================== -->
-    <section id="hostPanel" class="host-layout hidden">
-      <aside class="card host-sidebar">
-        <div class="section-title">
-          <p class="eyebrow">Host Control</p>
-          <h2>Quiz Panel</h2>
-        </div>
-        
-        <!-- Clean Host Controls: Only essential buttons -->
-        <div class="host-buttons" style="margin-top: 20px;">
-          <button id="startQuiz">Start / Restart</button>
-          <button id="revealAnswer" class="accent">Show Answer</button>
-          <button id="nextQuestion" class="secondary">Next Question</button>
-        </div>
-        
-        <div class="mini-info">
-          <div>
-            <span>Participants</span>
-            <strong id="participantCount">(0)</strong>
-          </div>
-          <div>
-            <span>Progress</span>
-            <strong id="progress">0/0</strong>
-          </div>
-        </div>
-      </aside>
-      <main class="host-main">
-        <section class="card question-card">
-          <div class="topline">
-            <div>
-              <p class="eyebrow">Current Question</p>
-              <h2 id="hostQuestion">Question</h2>
-            </div>
-          </div>
-          <div id="hostOptions" class="option-list"></div>
-          <h3>Live responses</h3>
-          <div id="bars"></div>
-          <h3>Participants</h3>
-          <div id="participants" class="chips"></div>
-          <div id="hostExplanation" class="explanation hidden"></div>
-        </section>
-        
-        <!-- Question manager -->
-        <section class="card manager-card">
-          <div class="manager-header">
-            <div>
-              <p class="eyebrow">Question Manager</p>
-              <h2>Add or Edit Questions</h2>
-            </div>
-            <button id="clearForm" class="secondary">Clear Form</button>
-          </div>
-          <div class="form-grid">
-            <div class="field full">
-              <label>Question</label>
-              <textarea id="qmQuestion" placeholder="Type your question here"></textarea>
-            </div>
-            <div class="field">
-              <label>Option A</label>
-              <input id="qmOption0" placeholder="Option A" />
-            </div>
-            <div class="field">
-              <label>Option B</label>
-              <input id="qmOption1" placeholder="Option B" />
-            </div>
-            <div class="field">
-              <label>Option C</label>
-              <input id="qmOption2" placeholder="Option C" />
-            </div>
-            <div class="field">
-              <label>Option D</label>
-              <input id="qmOption3" placeholder="Option D" />
-            </div>
-            <div class="field">
-              <label>Correct Answer</label>
-              <select id="qmAnswer">
-                <option value="0">A</option>
-                <option value="1">B</option>
-                <option value="2">C</option>
-                <option value="3">D</option>
-              </select>
-            </div>
-            <div class="field full">
-              <label>Explanation</label>
-              <textarea id="qmExplanation" placeholder="Type the explanation to show after answer reveal"></textarea>
-            </div>
-          </div>
-          <div class="manager-actions">
-            <button id="saveQuestion">Add Question</button>
-            <span id="qmStatus" class="small-status"></span>
-          </div>
-          <div class="question-list-header">
-            <h3>Current Questions</h3>
-            <span id="questionCountBadge">0 questions</span>
-          </div>
-          <div id="questionList" class="question-list"></div>
-        </section>
-      </main>
-    </section>
-
-    <!-- ==================== MAIN PLAYER GAMEPLAY SECTION ==================== -->
-    <section id="playerPanel" class="player-card hidden">
-      <div class="player-inner">
-        <p class="eyebrow" id="playerRoom"></p>
-        <h2 id="playerQuestion">Waiting for host...</h2>
-        <div id="playerOptions" class="player-options"></div>
-        <div id="playerExplanation" class="explanation hidden"></div>
-      </div>
-    </section>
-  </div>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="client.js"></script>
-</body>
-</html>
+          <p class="eyebrow">Or Join as Participant</p>
+     
