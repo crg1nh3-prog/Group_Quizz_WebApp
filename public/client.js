@@ -17,7 +17,7 @@ let hostQuestions = JSON.parse(
 );
 let editingIndex = null;
 
-// CONNECTION STATUS MONITOR
+// CONNECTION STATUS MONITORING FOR EASY TROUBLESHOOTING
 socket.on('connect', () => {
   console.log('Successfully connected to quiz server!');
   const errEl = $('joinError');
@@ -144,9 +144,9 @@ function syncQuestionsToServer() {
   );
 }
 
-// ==================== ALL BUTTON EVENT HANDLERS ====================
+// ==================== ERROR-GUARDED EVENT HANDLERS ====================
 
-// 1. Host Room Setup (Supports BOTH "createRoomBtn" and "createHost" HTML Button IDs)
+// 1. Host Room Setup (Supports BOTH "createRoomBtn" and "createHost" IDs)
 const createBtn = \$('createRoomBtn') || \$('createHost');
 if (createBtn) {
   createBtn.onclick = () => {
@@ -209,7 +209,7 @@ if (joinManualBtn) {
   };
 }
 
-// 3. Player Click to Join
+// 3. Player Click to Join (Supports BOTH "join-lobby-btn" and "confirmJoin" IDs)
 const joinLobbyBtn = \$('join-lobby-btn') || \$('confirmJoin');
 if (joinLobbyBtn) {
   joinLobbyBtn.onclick = () => {
@@ -254,7 +254,7 @@ function joinPlayer(nameToRegister) {
   );
 }
 
-// Reconnection Lifecycle on Refresh
+// Auto-Reconnection Lifecycle on Refresh
 if (roomId && role === 'player') {
   if (savedName) {
     joinPlayer(savedName);
@@ -501,6 +501,7 @@ function renderHost(summary, q) {
   }
 
   const total = Math.max(1, Object.keys(summary.responses).length);
+
   if ($('bars')) {
     $('bars').innerHTML = q.options
       .map((o, i) => {
@@ -655,110 +656,4 @@ function renderPlayer(summary, q) {
         </div>
       `;
     }
-    if ($('playerExplanation')) {
-      $('playerExplanation').classList.add('hidden');
-      $('playerExplanation').innerHTML = '';
-    }
-
-    const retakeBtn = document.getElementById('retakeQuizBtn');
-    if (retakeBtn) {
-      retakeBtn.addEventListener('click', () => {
-        selected = null;
-        socket.emit('player:retake', { roomId });
-      });
-    }
-
-    const showAnsBtn = document.getElementById('showAnswersBtn');
-    if (showAnsBtn) {
-      showAnsBtn.addEventListener('click', () => {
-        const reviewBox = document.getElementById('detailed-reviews-container');
-        if (reviewBox) {
-          if (reviewBox.style.display === 'none') {
-            reviewBox.style.display = 'block';
-            reviewBox.scrollIntoView({ behavior: 'smooth' });
-          } else {
-            reviewBox.style.display = 'none';
-          }
-        }
-      });
-    }
-    return;
-  }
-
-  if (\$('playerRoom')) \$('playerRoom').textContent = `Room ${summary.roomId} • Question ${summary.currentIndex + 1}/${summary.totalQuestions}`;
-  if (\$('playerQuestion')) \$('playerQuestion').textContent = summary.started ? q.question : 'Waiting for host to start...';
-
-  if (!summary.started) {
-    if ($('playerOptions')) {
-      $('playerOptions').innerHTML = `
-         <div style="text-align:center; padding: 40px 10px;">
-            <h3>Status: In Lobby ☕</h3>
-            <p>You have successfully connected! Wait for the host to click Start.</p>
-         </div>
-      `;
-    }
-    if (\$('playerExplanation')) \$('playerExplanation').classList.add('hidden');
-    return;
-  }
-
-  if ($('playerOptions')) {
-    $('playerOptions').innerHTML = q.options
-      .map((o, i) => {
-        const isSelected = selected === i;
-        const isCorrectOption = i === q.answer;
-        let optionStateClass = "";
-        
-        if (isSelected) {
-          optionStateClass = "selected";
-        }
-        if (summary.revealed) {
-          if (isCorrectOption) {
-            optionStateClass = "correct"; 
-          } else if (isSelected) {
-            optionStateClass = "incorrect"; 
-          }
-        }
-
-        return `
-          <button class="playerOption \${optionStateClass}" data-i="\${i}" ${summary.revealed ? 'disabled' : ''}>
-            <span class="option-letter">${letter(i)}</span>
-            <span>${esc(o)}</span>
-          </button>
-        `;
-      })
-      .join('');
-  }
-
-  document.querySelectorAll('.playerOption').forEach(btn => {
-    btn.onclick = () => {
-      selected = Number(btn.dataset.i);
-      socket.emit('player:answer', { roomId, optionIndex: selected });
-      renderPlayer(latest, q);
-    };
-  });
-
-  if ($('playerExplanation')) {
-    $('playerExplanation').classList.toggle('hidden', !summary.revealed);
-    $('playerExplanation').innerHTML = summary.revealed
-      ? `<b>Correct answer: ${letter(q.answer)}. ${esc(q.options[q.answer])}</b><br />${esc(q.explanation || 'No explanation added.')}`
-      : '';
-  }
-}
-
-function renderQuestionManager() {
-  const badge = $('questionCountBadge');
-  if (badge) badge.textContent = `${hostQuestions.length} question${hostQuestions.length === 1 ? '' : 's'}`;
-  if (!hostQuestions.length) {
-    if (\$('questionList')) \$('questionList').innerHTML = `<div class="empty-list">No questions yet. Add your first question using the form above.</div>`;
-    return;
-  }
-  if ($('questionList')) {
-    $('questionList').innerHTML = hostQuestions
-      .map((q, i) => {
-        return `
-          <div class="question-item">
-            <div class="question-item-main">
-              <div class="question-number">${i + 1}</div>
-              <div>
-                <h4>${esc(q.question)}</h4>
-                <p>Correct: <b>\${letter(q.answer)}. \${esc(q.options[q.answer])}
+    if ($('play
