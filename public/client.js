@@ -1,12 +1,13 @@
-// Force absolute secure connection to your Render domain
-const socket = io(window.location.origin, {
-  transports: ['websocket', 'polling'],
+// Clean and secure Socket.io connection configured for Render's free tier
+const socket = io({
+  transports: ['polling', 'websocket'], // Starts with polling for instant connection while Render wakes up, then upgrades
   upgrade: true,
   reconnection: true,
-  reconnectionAttempts
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 10
+});
 
 const $ = id => document.getElementById(id);
-
 const qs = new URLSearchParams(location.search);
 
 // Clean cache reset: If landing directly on the homepage, completely flush older stale sessions
@@ -17,19 +18,41 @@ if (!qs.has('room')) {
 let roomId = (sessionStorage.getItem('quiz_roomId') || qs.get('room') || '').toUpperCase();
 let role = sessionStorage.getItem('quiz_role') || qs.get('role') || '';
 let savedName = sessionStorage.getItem('quiz_playerName') || '';
-
 let selected = null;
 let latest = null;
-
 let hostQuestions = JSON.parse(
   localStorage.getItem('quizQuestions') || '[]'
 );
 let editingIndex = null;
 
+// Immediately prevent showing home screen on page refresh if we are already a player or host
+if (roomId && role === 'player') {
+  if (savedName) {
+    // We already have a name, go straight to player panel
+    show('playerPanel');
+  } else {
+    // Go to player name input screen
+    show('player-join-screen');
+  }
+} else if (roomId && role === 'host') {
+  show('lobby-screen');
+} else {
+  show('home');
+}
+
 socket.on('connect', () => {
   console.log('Connected to server successfully!');
   const errEl = $('joinError');
   if (errEl) errEl.textContent = '';
+
+  // Re-establish session states smoothly on connection/refresh
+  if (roomId && role === 'player' && savedName) {
+    joinPlayer(savedName);
+  } else if (roomId && role === 'host') {
+    socket.emit('host:loadQuestions', { roomId: roomId, questions: hostQuestions }, res => {
+      if (res && res.ok) render(res.summary);
+    });
+  }
 });
 
 socket.on('connect_error', (err) => {
@@ -152,19 +175,15 @@ function syncQuestionsToServer() {
   );
 }
 
-// ==================== ERROR-GUARDED HANDLERS ====================
-
 // Host Button Click
 const hostBtn = $('createRoomBtn') || $('createHost');
 if (hostBtn) {
   hostBtn.onclick = () => {
-    // Attempt connecting if disconnected
     if (!socket.connected) {
       socket.connect();
       alert("🔌 Connecting to server... Please wait a few seconds and try clicking again! (Render takes ~45 seconds to spin up on first load)");
       return;
     }
-
     socket.emit('host:create', {}, async res => {
       if (!res || !res.ok) return;
       roomId = res.summary.roomId;
@@ -173,6 +192,7 @@ if (hostBtn) {
       sessionStorage.setItem('quiz_role', role);
       history.replaceState(null, '', '/?room=' + roomId + '&role=host');
       show('lobby-screen');
+
       if ($('roomPill')) $('roomPill').textContent = 'Room ' + roomId;
       if ($('lobby-room-code')) $('lobby-room-code').textContent = roomId;
       const qr = await fetch('/api/room/' + roomId + '/qr').then(r => r.json());
@@ -182,6 +202,7 @@ if (hostBtn) {
         $('lobby-join-link').textContent = qr.joinUrl;
       }
       if ($('host-controls')) $('host-controls').style.display = 'block';
+
       if (hostQuestions.length > 0) {
         syncQuestionsToServer();
       } else {
@@ -306,7 +327,6 @@ function showAllCorrectAnswers() {
     }
     return;
   }
-
   const allAnswersHtml = questions
     .map((question, index) => {
       const answerIndex = Number(question.answer);
@@ -317,7 +337,6 @@ function showAllCorrectAnswers() {
         '</div>';
     })
     .join('');
-
   if ($('hostQuestion')) $('hostQuestion').textContent = '✅ Complete Answer Key';
   if ($('hostOptions')) {
     $('hostOptions').innerHTML = '<div><h3>All Correct Answers</h3>' + allAnswersHtml + '</div>';
@@ -396,7 +415,6 @@ function renderHost(summary, q) {
     }
     return;
   }
-
   if (summary.quizEnded) {
     const progress = $('progress');
     if (progress) progress.textContent = summary.totalQuestions + '/' + summary.totalQuestions;
@@ -432,7 +450,6 @@ function renderHost(summary, q) {
     }
     return;
   }
-
   const progress = $('progress');
   if (progress) progress.textContent = (summary.currentIndex + 1) + '/' + summary.totalQuestions;
   const hostQuestion = $('hostQuestion');
@@ -440,14 +457,12 @@ function renderHost(summary, q) {
   const participantCount = $('participantCount');
   if (participantCount) participantCount.textContent = '(' + summary.participants.length + ')';
 
-  // Real-time Sidebar names display
   const sidebarParticipantsList = $('sidebar-participants-list');
   if (sidebarParticipantsList) {
     sidebarParticipantsList.innerHTML = summary.participants
       .map(p => '<span class="sidebar-name">' + esc(p.name) + '</span>')
       .join('') || '<p class="muted" style="font-size:12px;">No one joined yet</p>';
   }
-
   const hostOptions = $('hostOptions');
   if (hostOptions) {
     hostOptions.innerHTML = q.options
@@ -510,7 +525,6 @@ function renderPlayer(summary, q) {
           '</div>';
       })
       .join('');
-
     const questions = summary.questions || [];
     const history = summary.historicalResponses || [];
     const detailedReviewCardsHtml = questions
@@ -521,6 +535,7 @@ function renderPlayer(summary, q) {
         let playerFeedbackHtml = "";
         let cardBackground = "#f8fff8";
         let cardBorder = "2px solid #34a853";
+
         if (playerResponseIndex === undefined) {
           playerFeedbackHtml = '<p style="color: #7f8c8d; font-weight: bold; margin: 8px 0 0 0;">⚠️ You didn\'t submit an answer.</p>';
           cardBackground = "#fdfefe";
@@ -532,6 +547,7 @@ function renderPlayer(summary, q) {
           cardBackground = "#fffbfb";
           cardBorder = "2px solid #ea4335";
         }
+
         const optionsBreakdown = questionObj.options.map((opt, optIndex) => {
           const isThisOptionCorrect = optIndex === questionObj.answer;
           const isThisOptionSelected = optIndex === playerResponseIndex;
@@ -586,6 +602,7 @@ function renderPlayer(summary, q) {
       playerExplanation.classList.add('hidden');
       playerExplanation.innerHTML = '';
     }
+
     const retakeBtn = document.getElementById('retakeQuizBtn');
     if (retakeBtn) {
       retakeBtn.addEventListener('click', () => {
@@ -593,6 +610,7 @@ function renderPlayer(summary, q) {
         socket.emit('player:retake', { roomId: roomId });
       });
     }
+
     const showAnsBtn = document.getElementById('showAnswersBtn');
     if (showAnsBtn) {
       showAnsBtn.addEventListener('click', () => {
@@ -635,6 +653,7 @@ function renderPlayer(summary, q) {
         const isSelected = selected === i;
         const isCorrectOption = i === q.answer;
         let optionStateClass = "";
+
         if (isSelected) {
           optionStateClass = "selected";
         }
@@ -706,9 +725,9 @@ window.editQuestion = function (index) {
   const q = hostQuestions[index];
   if ($('qmQuestion')) $('qmQuestion').value = q.question;
   if ($('qmOption0')) $('qmOption0').value = q.options[0] || '';
-  if ($('qmOption1')) $('qmOption1').value = q.options || '';
-  if ($('qmOption2')) $('qmOption2').value = q.options || '';
-  if ($('qmOption3')) $('qmOption3').value = q.options || '';
+  if ($('qmOption1')) $('qmOption1').value = q.options[1] || ''; // Fix: Use index 1
+  if ($('qmOption2')) $('qmOption2').value = q.options[2] || ''; // Fix: Use index 2
+  if ($('qmOption3')) $('qmOption3').value = q.options[3] || ''; // Fix: Use index 3
   if ($('qmAnswer')) $('qmAnswer').value = String(q.answer);
   if ($('qmExplanation')) $('qmExplanation').value = q.explanation || '';
   editingIndex = index;
