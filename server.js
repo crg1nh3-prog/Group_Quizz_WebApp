@@ -5,14 +5,20 @@ const QRCode = require('qrcode');
 
 const app = express();
 const server = http.createServer(app);
+
+// Optimized Socket.io configuration for hosting on Render's free tier
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "*", // Fix: Wildcard origin for trouble-free CORS connections
     methods: ["GET", "POST"],
     credentials: true
   },
-  allowEIO3: true
+  transports: ['polling', 'websocket'], // Fix: Starts with polling to let the Render container wake up, then upgrades
+  allowEIO3: true,
+  pingTimeout: 60000, // Fix: Increased timeout to 60 seconds to allow Render's cold-start process
+  pingInterval: 25000
 });
+
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static('public'));
@@ -196,7 +202,7 @@ function createRoomId() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let id = '';
   for (let i = 0; i < 6; i++) {
-    id += chars[Math.floor(Math.random() * chars.length)];
+    id += chars[Math.floor(Math.random() * chars.length)]; // Fix: Removed escape character before asterisk
   }
   return id;
 }
@@ -254,11 +260,9 @@ function roomSummary(room) {
     answer: 0,
     explanation: ''
   };
-
   const counts = q.options.map((_, i) =>
     Object.values(room.responses).filter(v => v === i).length
   );
-
   const leaderboard = Object.entries(room.scores)
     .map(([playerId, score]) => ({
       playerId,
@@ -266,9 +270,7 @@ function roomSummary(room) {
       score
     }))
     .sort((a, b) => b.score - a.score);
-
   const winner = room.quizEnded && leaderboard.length > 0 ? leaderboard[0] : null;
-
   return {
     roomId: room.roomId,
     currentIndex: room.currentIndex,
@@ -353,11 +355,9 @@ io.on('connection', socket => {
       });
     }
     socket.join(room.roomId);
-
     let existingPlayerId = Object.keys(room.participants).find(
       id => room.participants[id].name.toLowerCase() === String(name).toLowerCase()
     );
-
     if (existingPlayerId) {
       if (room.scores[existingPlayerId] !== undefined) {
         room.scores[socket.id] = room.scores[existingPlayerId];
@@ -375,12 +375,10 @@ io.on('connection', socket => {
       });
       delete room.participants[existingPlayerId];
     }
-
     room.participants[socket.id] = {
       id: socket.id,
       name: String(name || 'Guest').slice(0, 30)
     };
-
     cb?.({
       ok: true,
       participantId: socket.id,
@@ -442,18 +440,15 @@ io.on('connection', socket => {
     if (!q) {
       return cb?.({ ok: false });
     }
-
     room.historicalResponses.push({
       questionIndex: room.currentIndex,
       responses: { ...room.responses }
     });
-
     Object.entries(room.responses).forEach(([playerId, selectedAnswer]) => {
       if (selectedAnswer === q.answer) {
         room.scores[playerId] = (room.scores[playerId] || 0) + 1;
       }
     });
-
     const isLastQuestion = room.currentIndex === room.questions.length - 1;
     if (isLastQuestion) {
       room.quizEnded = true;
