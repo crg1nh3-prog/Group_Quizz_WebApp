@@ -110,13 +110,15 @@ p {
 }
 
 .hero-card {
+  max-width: 860px;          /* MATCH: Keeps the card beautifully sized */
+  margin: 20px auto;         /* MATCH: Centers the entire card on the page */
   min-height: 420px;
   padding: 48px;
   display: flex;
-  flex-direction: column;   /* Force elements to stack vertically */
+  flex-direction: column;    /* Stack items vertically */
   align-items: center;       /* Center items horizontally */
-  justify-content: center;    /* Center items vertically */
-  text-align: center;        /* Make sure all paragraph and heading text is centered */
+  justify-content: center;   /* Center items vertically */
+  text-align: center;        /* Center all inner text */
 }
 
 .hero-content {
