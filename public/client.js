@@ -404,7 +404,7 @@ function render(summary) {
 }
 
 function renderHost(summary, q) {
-  if (!summary.started) {
+  if (!summary.started && !summary.quizEnded) {
     const lobbyPlayerCount = $('lobby-player-count');
     if (lobbyPlayerCount) lobbyPlayerCount.textContent = summary.participants.length;
     const lobbyPlayersList = $('lobby-players-list');
