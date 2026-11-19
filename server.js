@@ -157,17 +157,6 @@ const defaultQuestions = [
     answer: 0,
     explanation: 'Relevant context helps the AI understand the task. Human verification is still necessary because detailed prompts do not guarantee that every answer will be correct.'
   },
- {
-  question: 'Which of the following AI capabilities has become widely accessible only in recent years?',
-  options: [
-    'Generating realistic images from a simple text description',
-    'Translating sentences between languages',
-    'Sorting email inboxes',
-    'Checking spelling in a document'
-  ],
-  answer: 0,
-  explanation: 'AI image generation from simple text prompts has become widely accessible in recent years due to major advances in Generative AI.'
-}
 ];
 
 const rooms = new Map();
