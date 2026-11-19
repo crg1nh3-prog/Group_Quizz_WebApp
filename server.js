@@ -47,17 +47,17 @@ const defaultQuestions = [
     answer: 2,
     explanation: 'ChatGPT, NotebookLM, and GitHub Copilot are all examples of Generative AI tools designed to generate content, assist users, or provide intelligent recommendations.'
   },
-  {
-    question: 'Which prompt is likely to produce the best result?',
-    options: [
-      'Write an email with good content',
-      'Help me with this',
-      'Create a professional email inviting managers to an AI workshop next Friday at 10 AM',
-      'Generate text'
-    ],
-    answer: 2,
-    explanation: 'A prompt normally produces a better result when it clearly describes the task, audience, tone, date, time, and expected output.'
-  },
+{
+  question: 'Which statement best describes the relationship between AI and Machine Learning (ML)?',
+  options: [
+    'AI and ML are exactly the same thing',
+    'AI is a part of ML',
+    'ML is a part of AI',
+    'AI and ML are completely unrelated'
+  ],
+  answer: 2,
+  explanation: 'Machine Learning is a subset of Artificial Intelligence. AI is the broader field, while ML is one approach that enables systems to learn from data.'
+},
   {
     question: 'What is an AI hallucination?',
     options: [
@@ -84,24 +84,24 @@ const defaultQuestions = [
     question: 'Which statement is TRUE?',
     options: [
       'AI is always correct',
-      'AI output should be verified by humans',
+      'AI can hallucinate and generate incorrect information and it needs to be verified by humans',
       'AI eliminates the need for critical thinking',
       'AI understands information exactly like humans'
     ],
     answer: 1,
     explanation: 'AI-generated output should be reviewed and verified, especially when it contains important business, technical, legal, financial, or safety-related information.'
   },
-  {
-    question: 'You need to analyze an Excel file with 50,000 rows and quickly identify trends, outliers, and insights. Which AI tool is most suitable?',
-    options: [
-      'ChatGPT',
-      'Gemini',
-      'Copilot',
-      'Perplexity'
-    ],
-    answer: 2,
-    explanation: 'Copilot is integrated directly into Excel and can analyze data, identify trends, and generate insights within the workbook.'
-  },
+{
+  question: 'What is the full form of GPT?',
+  options: [
+    'Generative Pre-trained Transformer',
+    'General Processing Technology',
+    'Generative Predictive Technology',
+    'General Pre-trained Transformer'
+  ],
+  answer: 0,
+  explanation: 'GPT stands for Generative Pre-trained Transformer. It refers to a type of AI model trained on large amounts of data to understand and generate content.'
+},
   {
     question: 'Which use case is MOST suitable for Copilot?',
     options: [
@@ -114,20 +114,9 @@ const defaultQuestions = [
     explanation: 'Copilot is tightly integrated with Microsoft 365 and can create PowerPoint presentations from Word documents and other Microsoft 365 content.'
   },
   {
-    question: 'Which of the following is NOT considered Generative AI content?',
-    options: [
-      'AI-generated image',
-      'AI-generated presentation',
-      'AI-generated code',
-      'Automated sales report dashboard refresh'
-    ],
-    answer: 3,
-    explanation: 'Refreshing a dashboard is primarily an automation or data-processing task. It does not necessarily involve generating new content using Generative AI.'
-  },
-  {
     question: 'Why do detailed prompts often perform better?',
     options: [
-      'They reduce ambiguity',
+      'They reduce confusion',
       'They increase internet speed',
       'They reduce AI processing power',
       'They guarantee perfect answers'
@@ -136,12 +125,12 @@ const defaultQuestions = [
     explanation: 'Detailed prompts reduce ambiguity by giving the AI clearer instructions, context, constraints, audience information, and an expected output format.'
   },
   {
-    question: 'Which industry is least likely to benefit from AI?',
+    question: 'Which industry benefits from AI?',
     options: [
-      'Manufacturing',
-      'Healthcare',
-      'Finance',
-      'None of the above'
+      'All Manufacturing',
+      'All Healthcare',
+      'All Finance',
+      'All of the above'
     ],
     answer: 3,
     explanation: 'Manufacturing, healthcare, and finance can all benefit from appropriate AI applications. The value depends on the specific problem, available data, controls, and implementation.'
@@ -168,28 +157,17 @@ const defaultQuestions = [
     answer: 0,
     explanation: 'Relevant context helps the AI understand the task. Human verification is still necessary because detailed prompts do not guarantee that every answer will be correct.'
   },
-  {
-    question: 'Which task is AI LEAST likely to fully replace?',
-    options: [
-      'Preparing monthly management reports',
-      'Analyzing customer feedback trends',
-      'Making high-stakes strategic business decisions',
-      'Creating project status updates'
-    ],
-    answer: 2,
-    explanation: 'Strategic decision-making requires accountability, organizational context, judgment, trade-off analysis, and human responsibility. AI can support the process but should not own the final decision.'
-  },
-  {
-    question: 'Which of the following tasks would have seemed almost impossible for everyday AI tools 10 years ago?',
-    options: [
-      'Generating realistic images from a text description',
-      'Playing chess',
-      'Sorting email inboxes',
-      'Spell checking'
-    ],
-    answer: 0,
-    explanation: 'AI image generation from simple text prompts became practical only in recent years thanks to advances in Generative AI.'
-  }
+ {
+  question: 'Which of the following AI capabilities has become widely accessible only in recent years?',
+  options: [
+    'Generating realistic images from a simple text description',
+    'Translating sentences between languages',
+    'Sorting email inboxes',
+    'Checking spelling in a document'
+  ],
+  answer: 0,
+  explanation: 'AI image generation from simple text prompts has become widely accessible in recent years due to major advances in Generative AI.'
+}
 ];
 
 const rooms = new Map();
